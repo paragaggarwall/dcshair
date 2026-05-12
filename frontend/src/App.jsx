@@ -4,6 +4,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Customers from './pages/Customers';
+import AddCustomer from './pages/AddCustomer';
 import Products from './pages/Products';
 import Contracts from './pages/Contracts';
 import GenerateContract from './pages/GenerateContract';
@@ -23,6 +24,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/users" element={<Users />} />
               <Route path="/customers" element={<Customers />} />
+              <Route path="/customers/add" element={<AddCustomer />} />
               <Route path="/products" element={<Products />} />
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/contracts/generate" element={<GenerateContract />} />
