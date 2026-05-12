@@ -16,5 +16,6 @@ router.use('/customers', customerRoutes);
 router.use('/products', productRoutes);
 router.use('/shipments', shipmentRoutes);
 router.use('/contracts', contractRoutes);
+router.use('/proformainvoice',contractRoutes);
 
 module.exports = router;
