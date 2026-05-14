@@ -12,6 +12,7 @@ export default function CustomSelect({
   searchable = true,
   onCreate = null,       // async fn(name) => newOption {id, name} — enables "create new" mode
   createLabel = 'Create new',
+  toggleAll = null,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,6 +104,21 @@ export default function CustomSelect({
                 </div>
               </div>
             )}
+
+            {toggleAll && !creating && (
+  <div className="px-3 py-2 border-b border-gray-50">
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        toggleAll.onClick();
+      }}
+      className="w-full px-3 py-2 rounded-lg bg-[#003366] text-white text-xs font-bold hover:bg-[#004080] transition-all"
+    >
+      {toggleAll.label}
+    </button>
+  </div>
+)}
 
             {/* Create-new inline form */}
             {creating && (

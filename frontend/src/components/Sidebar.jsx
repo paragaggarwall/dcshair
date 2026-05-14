@@ -11,7 +11,7 @@ import {
   Package,
   FileText,
   Receipt,
-  AlertCircle , 
+  AlertCircle,
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,12 +22,14 @@ const menuItems = [
   { name: 'Users', path: '/users', icon: Users },
   { name: 'Settings', path: '/settings', icon: Settings },
   { name: 'Proforma Invoice', path: '/proformainvoice', icon: Receipt },
-  { name: 'Payment Terms', path: '/payment-terms', icon: AlertCircle  },
-  
+  { name: 'Payment Terms', path: '/payment-terms', icon: AlertCircle },
+
 ];
 
 export default function Sidebar() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
 
   return (
     <aside className="w-64 bg-[#003366] text-white flex flex-col h-screen fixed left-0 top-0 shadow-xl">
@@ -56,14 +58,37 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="p-2 border-t border-white/10 space-y-1">
+
+        {/* USER INFO */}
+        <div className="flex items-center justify-between bg-white/5 p-3 rounded-xl">
+
+          <div className="text-left">
+            <p className="text-sm font-semibold text-white">
+              {user?.userName}
+            </p>
+            <p className="text-xs text-white/60">
+              {isAdmin ? 'Admin' : 'User'}
+            </p>
+          </div>
+
+          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white font-bold shadow-md">
+            {user?.userName?.charAt(0).toUpperCase() || 'A'}
+          </div>
+
+        </div>
+
+        {/* LOGOUT */}
         <button
           onClick={logout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-white/60 hover:text-white hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
+          className="flex items-center justify-center gap-3 px-4 py-3 w-full rounded-xl 
+               bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-red-200
+               transition-all duration-200"
         >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Logout</span>
         </button>
+
       </div>
     </aside>
   );

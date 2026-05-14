@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
-import { 
+import {
   FileText, ArrowLeft, Loader2, Save, Info, Truck, CreditCard, Package, Trash2, Users, UserCheck
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -102,7 +102,7 @@ export default function GenerateContract() {
   };
 
   const totalWeight = formData.items.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
-  const totalPrice  = formData.items.reduce((sum, item) => sum + ((parseFloat(item.quantity) || 0) * (parseFloat(item.pricePerKg) || 0)), 0);
+  const totalPrice = formData.items.reduce((sum, item) => sum + ((parseFloat(item.quantity) || 0) * (parseFloat(item.pricePerKg) || 0)), 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -128,6 +128,32 @@ export default function GenerateContract() {
   }
 
   const customerSelected = !!formData.customerId;
+
+  const handleToggleAllProducts = () => {
+    const allSelected =
+      options.products.length > 0 &&
+      options.products.every(product =>
+        formData.items.some(item => item.productId === product.id)
+      );
+
+    if (allSelected) {
+      setFormData(prev => ({
+        ...prev,
+        items: []
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        items: options.products.map(product => ({
+          productId: product.id,
+          name: product.name,
+          skuCode: product.skuCode,
+          quantity: 0,
+          pricePerKg: 0
+        }))
+      }));
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-20">
@@ -221,8 +247,26 @@ export default function GenerateContract() {
         <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 space-y-6">
           <SectionHeader icon={<Package className="w-5 h-5" />} title="Product Details" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-            <CustomSelect label="Add Product" options={options.products} value=""
-              onChange={handleProductSelect} placeholder="Search and add product..." />
+            {/* <CustomSelect label="Add Product" options={options.products} value=""
+              onChange={handleProductSelect} placeholder="Search and add product..." /> */}
+
+            <CustomSelect
+              label="Add Product"
+              options={options.products}
+              value=""
+              onChange={handleProductSelect}
+              placeholder="Search and add product..."
+              toggleAll={{
+                label:
+                  options.products.length > 0 &&
+                    options.products.every(product =>
+                      formData.items.some(item => item.productId === product.id)
+                    )
+                    ? "Unselect All Products"
+                    : "Select All Products",
+                onClick: handleToggleAllProducts
+              }}
+            />
             <CustomSelect label="Terms of Payment *" required options={options.termsOfPayment}
               value={formData.termsOfPaymentId} onChange={(val) => setFormData(p => ({ ...p, termsOfPaymentId: val }))}
               placeholder="Select Payment Terms"
