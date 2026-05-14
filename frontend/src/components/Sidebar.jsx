@@ -19,6 +19,7 @@ const menuItems = [
   { name: 'Contracts', path: '/contracts', icon: FileText },
   { name: 'Users', path: '/users', icon: Users },
   { name: 'Settings', path: '/settings', icon: Settings },
+  { name: 'InvoiceGenerate', path: '/ProformaInvoiceGenerate', icon: Settings },
 ];
 
 export default function Sidebar() {

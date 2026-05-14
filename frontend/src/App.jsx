@@ -11,6 +11,7 @@ import GenerateContract from './pages/GenerateContract';
 import Login from './pages/Login';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProformaInvoiceGenerate from './pages/Generateproforma';
 
 function App() {
   return (
@@ -18,7 +19,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/" element={<Dashboard />} />
@@ -29,6 +30,7 @@ function App() {
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/contracts/generate" element={<GenerateContract />} />
               <Route path="/settings" element={<div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 font-bold text-gray-400">Settings Page Under Construction</div>} />
+              <Route path="/ProformaInvoiceGenerate" element={<ProformaInvoiceGenerate />} />
             </Route>
           </Route>
 
