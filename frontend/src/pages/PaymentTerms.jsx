@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 import api from "../utils/api";
-
+//dfdf
 export default function TermsOfPayment() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
