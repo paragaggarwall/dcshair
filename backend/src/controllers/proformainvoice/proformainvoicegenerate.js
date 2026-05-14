@@ -5,35 +5,36 @@
 
 
 const PDFDocument = require("pdfkit");
+const prisma = require("../../db");
 
-exports.proformainvoice = async (req, res) => {
+exports.proformainvoicepdf = async (req, res) => {
   try {
     const data = req.body;
 
-    console.log("wvget",data);
+    console.log("wvget", data);
 
-    const {consignee,notifyParty,buyer}=data
+    const { consignee, notifyParty, buyer } = data
 
-    const consigneedetails=`${consignee.name} ,
+    const consigneedetails = `${consignee.name} ,
 ${consignee.address} ,
 USCI NUMBER: ${""},
 CTC:${" "} ,TEL: ${consignee.phone}
 ${consignee.country} `
 
 
-const NotifyPartydetails=`${notifyParty.name} ,
+    const NotifyPartydetails = `${notifyParty.name} ,
 ${notifyParty.address} ,
 USCI NUMBER: ${""},
 CTC:${" "} ,TEL: ${notifyParty.phone}
 ${notifyParty.country} `
 
-const Buyerdetails =`${buyer.name} ,
+    const Buyerdetails = `${buyer.name} ,
 ${buyer.address} ,
 USCI NUMBER: ${""},
 CTC:${" "} ,TEL: ${buyer.phone}
 ${buyer.country} `
 
-    
+
 
     const doc = new PDFDocument({
       size: "A4",
@@ -71,7 +72,7 @@ ${buyer.country} `
 
     // horizontals
     [
-      160,  
+      160,
     ].forEach((y) => {
       doc.moveTo(25, y).lineTo(570, y).stroke();
     });
@@ -104,7 +105,7 @@ ${buyer.country} `
     doc.font("Helvetica-Bold");
     doc.text("Exporter's Ref.", 435, 75);
 
-   doc.moveTo(300, 100).lineTo(570, 100).stroke();
+    doc.moveTo(300, 100).lineTo(570, 100).stroke();
 
 
     doc.text("Buyer's Order No. & Date", 305, 105);
@@ -118,7 +119,7 @@ ${buyer.country} `
     );
     doc.text(`${data.lcNo || ""} ${data.lcDate || ""}`, 435, 118);
 
-       doc.moveTo(300, 130).lineTo(570, 130).stroke();
+    doc.moveTo(300, 130).lineTo(570, 130).stroke();
 
 
     doc.font("Helvetica-Bold");
@@ -133,7 +134,7 @@ ${buyer.country} `
     doc.font("Helvetica");
     doc.text(consigneedetails || "", 30, 178, { width: 250 });
 
-      doc.moveTo(25, 240).lineTo(300, 240).stroke();
+    doc.moveTo(25, 240).lineTo(300, 240).stroke();
 
     // doc.text(data.consignee?.address || "", 30, 193, { width: 250 });
     // doc.text(data.consignee?.country || "", 30, 208);
@@ -146,19 +147,19 @@ ${buyer.country} `
     doc.font("Helvetica");
     doc.text(Buyerdetails || "", 305, 178, { width: 250 });
 
-          doc.moveTo(300, 250).lineTo(570, 250).stroke();
+    doc.moveTo(300, 250).lineTo(570, 250).stroke();
 
-    
+
 
     // ---------------- NOTIFY PARTY ----------------
     doc.font("Helvetica-Bold");
     doc.text("Notify Party", 30, 250);
 
     doc.font("Helvetica");
-    doc.text(NotifyPartydetails|| "", 30, 260, { width: 250 });
+    doc.text(NotifyPartydetails || "", 30, 260, { width: 250 });
 
-        // doc.moveTo(25, 290).lineTo(300, 290).stroke();
-   
+    // doc.moveTo(25, 290).lineTo(300, 290).stroke();
+
 
     // country rows
     doc.font("Helvetica-Bold");
@@ -169,10 +170,10 @@ ${buyer.country} `
     doc.text(data.countryOfOrigin || "", 305, 270);
     doc.text(data.countryOfDestination || "", 430, 270);
 
-    
 
-      doc.moveTo(425, 250).lineTo(425, 290).stroke();
-      doc.moveTo(300, 290).lineTo(570, 290).stroke();
+
+    doc.moveTo(425, 250).lineTo(425, 290).stroke();
+    doc.moveTo(300, 290).lineTo(570, 290).stroke();
 
 
     doc.font("Helvetica-Bold");
@@ -209,7 +210,7 @@ ${buyer.country} `
 
     shipping.forEach(([label, value]) => {
       doc.font("Helvetica-Bold").fontSize(7).text(label, 30, sy);
-      doc.font("Helvetica").text(value || "", 30, sy+5);
+      doc.font("Helvetica").text(value || "", 30, sy + 5);
       sy += 25;
     });
 
@@ -276,174 +277,29 @@ ${buyer.country} `
   }
 };
 
+exports.getContractParties = async (req, res) => {
+  try {
+    const contractId = parseInt(req.params.contractId);
 
-// exports.proformainvoice = async (req, res) => {
-//   try {
-//     const data = req.body;
+    const allparty = await prisma.contract.findUnique({
+      where: { id: contractId },
+      include: {
+        consignee: true,
+        buyer: true,
+        notifyParty: true,
+        contactPerson: true,
+        termsOfPayment: true,
+        // products: true,
+        contractItems: {
+          include: {
+            product: true
+          },
+        }
+      }
+    });
 
-//     const doc = new PDFDocument({
-//       size: "A4",
-//       margin: 20,
-//     });
-
-
-//     console.log("gvtrbgrt",doc);
-    
-
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader(
-//       "Content-Disposition",
-//       `attachment; filename="proforma-invoice-${data.invoiceNo || "draft"}.pdf"`
-//     );
-
-//     doc.pipe(res);
-
-//     const left = 30;
-//     const right = 565;
-//     let y = 30;
-
-//     const drawLine = (yPos) => {
-//       doc.moveTo(left, yPos).lineTo(right, yPos).stroke();
-//     };
-
-//     // const drawlineX = (xPos)
-
-//     const box = (x, y, w, h) => {
-//       doc.rect(x, y, w, h).stroke();
-//     };
-
-//     // ================= TITLE =================
-//     doc.font("Helvetica-Bold").fontSize(16);
-//     doc.text("PROFORMA INVOICE", left, y, { align: "center", width: 535 });
-//     y += 25;
-
-//     drawLine(y);
-//     y += 10;
-
-//     // ================= HEADER BLOCK =================
-//     const headerStart = y;
-
-//     doc.fontSize(9);
-
-//     // LEFT: Exporter / Customer
-//     doc.font("Helvetica-Bold").text("Exporter", left, y);
-//     doc.font("Helvetica").text(data.customer?.name || "", left, y + 15);
-//     doc.text(data.customer?.address || "", left, y + 30, { width: 250 });
-//     doc.text(
-//       `${data.customer?.city || ""} ${data.customer?.state || ""}`,
-//       left,
-//       y + 60
-//     );
-//     doc.text(data.customer?.country || "", left, y + 75);
-
-//     // RIGHT: Invoice Info
-//     doc.font("Helvetica-Bold").text(
-//       "Proforma Invoice No. & Date",
-//       320,
-//       y
-//     );
-
-//     doc.font("Helvetica")  .text(`${data.invoiceNo || ""} - ${data.invoiceDate || ""}`, 320, y + 15)
-//     // drawLine()
-//       // .text(`${data.invoiceDate || ""}`, 32, y + 30)
-//       // .text(`Buyer Order: ${data.buyerOrderNo || ""}`, 320, y + 45)
-//       // .text(`LC No: ${data.lcNo || ""}`, 320, y + 60);
-
-//     y += 110;
-
-//     drawLine(y);
-//     y += 10;
-
-//     // ================= PARTIES =================
-//     const section = (title, x, content) => {
-//       doc.font("Helvetica-Bold").text(title, x, y);
-//       doc.font("Helvetica").text(content, x, y + 15, { width: 250 });
-//     };
-
-//     section(
-//       "Consignee",
-//       left,
-//       `${data.consignee?.name || ""}\n${data.consignee?.address || ""}\n${data.consignee?.country || ""}`
-//     );
-
-//     section(
-//       "Buyer",
-//       320,
-//       `${data.buyer?.name || ""}\n${data.buyer?.address || ""}\n${data.buyer?.country || ""}`
-//     );
-
-//     y += 80;
-
-//     drawLine(y);
-//     y += 10;
-
-//     // ================= SHIPPING INFO =================
-//     doc.font("Helvetica-Bold").text("Shipping Details", left, y);
-
-//     y += 15;
-
-//     const shipping = [
-//       ["Pre-Carriage", data.preCarriageBy],
-//       ["Port Loading", data.portOfLoading],
-//       ["Vessel", data.operatingAirlines],
-//       ["Port Discharge", data.portOfFinalDestination],
-//     ];
-
-//     shipping.forEach(([k, v]) => {
-//       doc.font("Helvetica-Bold").text(k + ":", left, y);
-//       doc.font("Helvetica").text(v || "-", 150, y);
-//       y += 14;
-//     });
-
-//     y += 10;
-
-//     drawLine(y);
-//     y += 10;
-
-//     // ================= PRODUCT TABLE =================
-//     doc.font("Helvetica-Bold").fontSize(9);
-//     doc.text("Description", left, y);
-//     doc.text("Size", 300, y);
-//     doc.text("Qty", 370, y);
-//     doc.text("Rate", 430, y);
-//     doc.text("Amount", 490, y);
-
-//     y += 15;
-//     drawLine(y);
-//     y += 10;
-
-//     let total = 0;
-
-//     (data.items || []).forEach((item) => {
-//       doc.font("Helvetica").fontSize(8);
-
-//       doc.text(item.name || "", left, y, { width: 260 });
-//       doc.text(item.size || "-", 300, y);
-//       doc.text(String(item.quantity || 0), 370, y);
-//       doc.text(String(item.pricePerKg || 0), 430, y);
-
-//       const amt = Number(item.totalAmount || 0);
-//       total += amt;
-
-//       doc.text(amt.toFixed(2), 490, y);
-
-//       y += 18;
-//     });
-
-//     y += 10;
-//     drawLine(y);
-//     y += 10;
-
-//     // ================= TOTAL =================
-//     doc.font("Helvetica-Bold").fontSize(10);
-//     doc.text(`TOTAL USD: ${total.toFixed(2)}`, 400, y);
-
-//     doc.end();
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       success: false,
-//       message: error.message,
-//     });
-//   }
-// };
+    res.json(allparty);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
