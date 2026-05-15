@@ -6,7 +6,7 @@ const shipmentRoutes = require('./shipmentRoutes');
 const contractRoutes = require('./contractRoutes');
 const { generateProformaInvoice } = require('../controllers/proformagenerate/generateproformainvoice');
 const proformainvoiceRoutes = require('./proformainvoiceRoutes')
-const { proformainvoice } = require('../controllers/proformainvoice/proformainvoicegenerate');
+// const { proformainvoice } = require('../controllers/proformainvoice/proformainvoicegenerate');
 
 const router = express.Router();
 

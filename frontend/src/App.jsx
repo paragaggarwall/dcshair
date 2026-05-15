@@ -11,9 +11,9 @@ import GenerateContract from './pages/GenerateContract';
 import Login from './pages/Login';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import ProformaInvoiceGenerate from './pages/Generateproforma';
+// import ProformaInvoiceGenerate from './pages/Generateproforma';
 import ProformaInvoice from './pages/ProformaInvoice';
-// import ProformaInvoiceGenerate from './pages/ProformaInvoiceGenerate';
+import ProformaInvoiceGenerate from './pages/ProformaInvoiceGenerate';
 import TermsOfPayment from './pages/PaymentTerms';
 
 function App() {
