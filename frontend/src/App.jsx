@@ -11,8 +11,9 @@ import GenerateContract from './pages/GenerateContract';
 import Login from './pages/Login';
 import { AuthProvider } from './components/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProformaInvoiceGenerate from './pages/Generateproforma';
 import ProformaInvoice from './pages/ProformaInvoice';
-import ProformaInvoiceGenerate from './pages/ProformaInvoiceGenerate';
+// import ProformaInvoiceGenerate from './pages/ProformaInvoiceGenerate';
 import TermsOfPayment from './pages/PaymentTerms';
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           <Route element={<ProtectedRoute />}>
             <Route element={<DashboardLayout />}>
               <Route path="/" element={<Dashboard />} />
@@ -32,9 +33,10 @@ function App() {
               <Route path="/contracts" element={<Contracts />} />
               <Route path="/contracts/generate" element={<GenerateContract />} />
               <Route path="/settings" element={<div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 font-bold text-gray-400">Settings Page Under Construction</div>} />
-              <Route path="/proformainvoice" element={<ProformaInvoice/>} />
-              <Route path="/proformainvoice/generate" element={<ProformaInvoiceGenerate/>} />
-              <Route path="/payment-terms" element={<TermsOfPayment/>} />
+              <Route path="/ProformaInvoiceGenerate" element={<ProformaInvoiceGenerate />} />
+              <Route path="/proformainvoice" element={<ProformaInvoice />} />
+              <Route path="/proformainvoice/generate" element={<ProformaInvoiceGenerate />} />
+              <Route path="/payment-terms" element={<TermsOfPayment />} />
             </Route>
           </Route>
 
