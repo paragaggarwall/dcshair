@@ -31,11 +31,36 @@ export default function Sidebar() {
   const isAdmin = user?.role === 'Admin';
 
 
+
+
+
   return (
     <aside className="w-64 bg-[#003366] text-white flex flex-col h-screen fixed left-0 top-0 shadow-xl">
       <div className="px-6 py-4 flex items-center gap-3 border-b border-white/10">
-        <div className="bg-white/10 p-2 rounded-lg">
-          <Scissors className="w-6 h-6 text-white" />
+        <div
+          style={{
+            width: 70,
+            height: 44,
+            borderRadius: '50%',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+           
+          }}
+        >
+          <img
+            src="/logo1.png"
+            alt="DCS Hair Logo"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              borderRadius: '100%',
+
+            }}
+          />
         </div>
         <h1 className="text-xl font-bold tracking-tight">DCS Hair</h1>
       </div>

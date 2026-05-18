@@ -47,11 +47,30 @@ const Login = () => {
       >
         <div className="bg-white border border-gray-100 rounded-[2rem] p-10 shadow-xl shadow-blue-900/5">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-[#003366] mb-6 shadow-lg shadow-[#003366]/20">
-              <LogIn className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-500 font-medium">DCS Hair Management System</p>
+            <div className="mb-5 flex items-center justify-center">
+                <div
+                  style={{
+                    width: 160,
+                    height: 112,
+                    borderRadius: '100%',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src="/logo.png"
+                    alt="DCS Logo"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'fill',
+                      display: 'block',
+                    }}
+                  />
+                </div>
+              </div>
+            <h1 className="text-xl font-extrabold text-gray-900 mb-2">DCS Hair Management System</h1>
+            <p className="text-gray-500 font-medium">Welcome Back</p>
             <div className="h-1 w-12 bg-[#003366] rounded-full mx-auto mt-4"></div>
           </div>
 
@@ -115,7 +134,7 @@ const Login = () => {
               )}
             </button>
           </form>
-          
+
           <div className="mt-10 text-center">
             <p className="text-gray-400 text-xs font-medium uppercase tracking-widest">
               Secured by Antigravity AI

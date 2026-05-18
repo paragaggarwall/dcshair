@@ -3,14 +3,16 @@ import {
   Users, 
   UserCircle, 
   Calendar, 
-  TrendingUp 
+  TrendingUp, 
+  DollarSign
 } from 'lucide-react';
 
 const stats = [
   { label: 'Total Customers', value: '1,284', icon: UserCircle, color: 'text-blue-600', bg: 'bg-blue-100' },
-  { label: 'Total Staff', value: '24', icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  // { label: 'Total Staff', value: '24', icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-100' },
   { label: 'Today\'s Appointments', value: '12', icon: Calendar, color: 'text-orange-600', bg: 'bg-orange-100' },
   { label: 'Monthly Growth', value: '+14.5%', icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-100' },
+  { label: 'Turn Over', value: '$14.5 Cr.', icon: DollarSign, color: 'text-purple-600', bg: 'bg-purple-100' },
 ];
 
 export default function Dashboard() {

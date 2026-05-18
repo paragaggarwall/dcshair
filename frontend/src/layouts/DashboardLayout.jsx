@@ -13,7 +13,7 @@ export default function DashboardLayout() {
       <Sidebar />
       <main className="flex-1 ml-64 min-h-screen">
         {/* Modern Header */}
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
+        {/* <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
           <div>
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Management Portal</h2>
             <div className="h-1 w-8 bg-[#003366] rounded-full mt-1"></div>
@@ -37,8 +37,8 @@ export default function DashboardLayout() {
               <LogOut className="w-5 h-5" />
             </button>
           </div>
-        </header>
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 p-2">
+        </header> */}
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ">
           <Outlet />
         </div>
       </main>

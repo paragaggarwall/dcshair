@@ -78,7 +78,7 @@ export default function Contracts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center px-6 pt-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Contracts</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and generate export contracts</p>
