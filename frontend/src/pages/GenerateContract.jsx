@@ -67,8 +67,8 @@ export default function GenerateContract() {
   };
 
   // Inline party creation — posts to /party and updates local list
-  const makePartyCreator = (type, partyKey) => async (name) => {
-    const res = await api.post('/contracts/party', { type, customerId: formData.customerId, name });
+  const makePartyCreator = (type, partyKey) => async (data) => {
+    const res = await api.post('/contracts/party', { type, customerId: formData.customerId, data });
     const newParty = res.data;
     setParties(prev => ({ ...prev, [partyKey]: [...prev[partyKey], newParty] }));
     return newParty;

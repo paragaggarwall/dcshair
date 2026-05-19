@@ -19,15 +19,6 @@ router.use('/customers', customerRoutes);
 router.use('/products', productRoutes);
 router.use('/shipments', shipmentRoutes);
 router.use('/contracts', contractRoutes);
-router.post("/proformainvoice", (req, res) => {
-    try {
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="proforma-invoice.pdf"`);
-        generateProformaInvoice(req.body, res); // res is the outputStream
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-});
 router.use('/proformainvoice', proformainvoiceRoutes);
 
 module.exports = router;

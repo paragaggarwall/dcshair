@@ -131,7 +131,7 @@ exports.getCustomerParties = async (req, res) => {
 // Generic create for any sub-entity type belonging to a customer
 exports.createParty = async (req, res) => {
   try {
-    const { type, customerId, ...data } = req.body;
+    const { type, customerId,data } = req.body;
     const models = { consignee: 'consignee', buyer: 'buyer', notifyParty: 'notifyParty', contactPerson: 'contactPerson' };
     if (!models[type]) return res.status(400).json({ error: 'Invalid party type' });
 

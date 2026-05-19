@@ -169,7 +169,7 @@ export default function ProformaInvoiceGenerate() {
 
         const required = [
             { key: "Contract", value: contractId },
-            { key: "Invoice Number", value: invoiceNo },
+            { key: "Proforma Invoice Number", value: invoiceNo },
             { key: "Invoice Date", value: invoiceDate },
             { key: "LC Number", value: lcnumber },
             { key: "LC Date", value: lcDate },
@@ -412,7 +412,7 @@ export default function ProformaInvoiceGenerate() {
                             </div>
 
                             <EditField
-                                label="Invoice Number"
+                                label="Proforma Invoice Number"
                                 required
                                 value={invoiceNo}
                                 onChange={setInvoiceNo}
