@@ -189,7 +189,7 @@ function generateProformaInvoice(data, outputStream) {
     const shippingLabels1 = ["Pre-Carriage By", "Vessel / Flight No.", "Port of Discharge"];
     const shippingVals1 = [data.preCarriageBy || "", data.vesselFlightNo || "", data.portOfFinalDestination || ""];
     const shippingLabels2 = ["Place of Receipt by Pre-carrier", "Port of Loading", "Final Destination"];
-    const shippingVals2 = [data.placeOfReceipt || "", data.portOfLoading || "", data.portOfFinalDestination || ""];
+    const shippingVals2 = [data.portOfLoading || "", data.portOfLoading || "", data.portOfFinalDestination || ""];
 
     // Shipping sub-cols split at midpoint of the left column
     const shipMidX = IX + LEFT_W / 2;
@@ -288,7 +288,7 @@ function generateProformaInvoice(data, outputStream) {
 
     // Terms sub-row
     const tTop = cBot;
-    cellContent(doc, "Terms of Delivery and Payment", data.termsOfPayment || "", RIGHT_X, tTop, RIGHT_W);
+    cellContent(doc, "Terms of Delivery and Payment", data.termsOfPayment.name || "", RIGHT_X, tTop, RIGHT_W);
 
     // hLine(doc, row3Bot);
     hLineScoped(doc, row3Bot, IX, RIGHT_X);
@@ -437,7 +437,7 @@ function generateProformaInvoice(data, outputStream) {
 
             // Carton count
             doc.text(
-                data.pkgCount || "104 CARTONS",
+                data.pkgCount,
                 pkgX,
                 subY,
                 {
@@ -452,7 +452,7 @@ function generateProformaInvoice(data, outputStream) {
             doc.font("Helvetica-Bold").fontSize(7);
 
             doc.text(
-                data.containerNo || "DCS",
+                data.containerNo,
                 marksX,
                 valueY,
                 {
@@ -462,7 +462,7 @@ function generateProformaInvoice(data, outputStream) {
             );
 
             doc.text(
-                data.containerRange || "001 TO 104",
+                data.containerRange,
                 marksX,
                 valueY + 10,
                 {
