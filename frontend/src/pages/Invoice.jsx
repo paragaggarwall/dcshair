@@ -63,12 +63,15 @@ import {
   Globe, MapPin, Package, CreditCard, Calendar, Hash,
   Plane, Ship, Train, Truck, CheckCircle2, Clock,
   AlertCircle, DollarSign, RefreshCw, X, CheckCheck, Info,
+  Eye,
+  Download,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import InputBox from '../components/InputBox';
 import CustomSelect from '../components/CustomSelect';
-import { useGetMyInvoicesQuery } from './invoiceapi/Invoiceapislice';
+import { useGetMyInvoicesQuery, useInvoicePdfGenerateMutation } from './invoiceapi/Invoiceapislice';
+import toast from 'react-hot-toast';
 
 
 const TOAST_ICONS = {
@@ -185,11 +188,13 @@ function ShipmentBadge({ invoice }) {
 
 export default function Invoice() {
   const navigate = useNavigate();
-  const { toasts, toast, removeToast, updateToast } = useToast();
+  const { toasts, removeToast, updateToast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [previewState, setPreviewState] = useState({ open: false, url: null, name: '', loading: false });
+
 
   const {
     data: response,
@@ -202,6 +207,8 @@ export default function Invoice() {
   } = useGetMyInvoicesQuery();
 
   const invoices = response?.data ?? [];
+
+  const [invoicePdfGenerate] = useInvoicePdfGenerateMutation();
 
   // Toast on fetch state transitions
   const loadingToastRef = useRef(null);
@@ -258,6 +265,58 @@ export default function Invoice() {
     { id: 'In Transit', name: 'In Transit' },
     { id: 'Delivered', name: 'Delivered' },
   ];
+
+
+
+  async function handleDownload(e, pi) {
+    e.stopPropagation();
+    try {
+      const blob = await invoicePdfGenerate(pi.id).unwrap();
+      const url = URL.createObjectURL(new Blob([blob]));
+      const a = Object.assign(document.createElement('a'), {
+        href: url, download: `invoice-${pi.InvoiceNo}.pdf`,
+      });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.log("regrtgt", err);
+      toast.error(err?.data?.message || err?.message || err?.data || 'Failed to download PDF');
+    }
+  }
+
+
+  useEffect(() => {
+    return () => {
+      if (previewState.url) window.URL.revokeObjectURL(previewState.url);
+    };
+  }, [previewState.url]);
+
+  const handlePreview = async (e, inv) => {
+    e.stopPropagation();
+
+    if (!inv?.id) {
+      toast.error("invoice not found");
+      return;
+    }
+
+    setPreviewState({ open: true, url: null, name: inv?.invoiceNo || "invoice Preview", loading: true, });
+    try {
+      const blob = await invoicePdfGenerate(inv.id).unwrap();
+      const blobUrl = URL.createObjectURL(blob);
+      setPreviewState({ open: true, url: blobUrl, name: inv?.invoiceNo || "invoice Preview", loading: false, });
+    } catch (err) {
+      console.error(err);
+      setPreviewState({ open: false, url: null, name: "", loading: false, });
+      toast.error(err?.data?.message || err?.message || err?.data || "Failed to load PDF preview");
+    }
+  };
+
+  const closePreview = () => {
+    if (previewState.url) window.URL.revokeObjectURL(previewState.url);
+    setPreviewState({ open: false, url: null, name: '', loading: false });
+  };
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-gray-50">
@@ -337,30 +396,11 @@ export default function Invoice() {
           <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
             {filtered.length} Total Invoices
           </span>
-          {/* <div className="flex items-center gap-2">
-            <button
-              onClick={() => refetch()}
-              disabled={isFetching}
-              className="p-2.5 rounded-xl hover:bg-gray-100 text-gray-500 transition-all disabled:opacity-40 cursor-pointer"
-              title="Refresh"
-            >
-              <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
-            </button>
-            <button
-              onClick={() => navigate('/invoice/generate')}
-              className="bg-[#003366] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2
-                         hover:bg-[#004080] transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Generate Invoice
-            </button>
-          </div> */}
         </div>
 
         {/* ─── TABLE ────────────────────────────────────────────────────────── */}
         <div className="flex-1 overflow-hidden flex flex-col min-h-0 mb-7">
 
-          {/* Fixed header */}
           <table className="w-full text-left border-collapse table-fixed">
             <colgroup>
               <col className="w-[22%]" />
@@ -392,7 +432,6 @@ export default function Invoice() {
             </thead>
           </table>
 
-          {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <table className="w-full text-left border-collapse table-fixed">
               <colgroup>
@@ -549,13 +588,30 @@ export default function Invoice() {
 
                     {/* Action */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end">
+                      {/* <div className="flex items-center justify-end">
                         <button
                           //   onClick={() => navigate(`/invoice/edit/${inv.id}`)}
                           className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-all active:scale-90 cursor-pointer"
                           title="Edit Invoice"
                         >
                           <Pencil className="w-4 h-4" />
+                        </button>
+                      </div> */}
+
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={(e) => handlePreview(e, inv)}
+                          className="p-2 hover:bg-blue-50 rounded-lg text-[#003366] transition-all active:scale-90 cursor-pointer"
+                          title="Preview PDF"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => handleDownload(e, inv)}
+                          className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-all active:scale-90 cursor-pointer"
+                          title="Download PDF"
+                        >
+                          <Download className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -568,6 +624,62 @@ export default function Invoice() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {previewState.open && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closePreview}
+              className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="relative z-10 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/60 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#003366] rounded-lg">
+                    <FileText className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-gray-900">{previewState.name}</h2>
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Contract PDF Preview</p>
+                  </div>
+                </div>
+                <button
+                  onClick={closePreview}
+                  className="p-2 hover:bg-gray-200 rounded-xl text-gray-500 hover:text-gray-700 transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* PDF Viewer */}
+              <div className="flex-1 bg-gray-100 overflow-hidden">
+                {previewState.loading ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+                    <Loader2 className="w-10 h-10 animate-spin text-[#003366]" />
+                    <p className="text-sm font-semibold text-gray-500">Generating PDF...</p>
+                  </div>
+                ) : (
+                  <iframe
+                    src={previewState.url}
+                    className="w-full h-full border-0"
+                    title="Contract PDF Preview"
+                  />
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ═══ TOASTS ══════════════════════════════════════════════════════════ */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />

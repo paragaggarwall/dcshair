@@ -142,7 +142,7 @@ const menuItems = [
   { name: 'Customers', path: '/customers', icon: UserCircle },
   { name: 'Contracts', path: '/contracts', icon: FileText },
   // { name: 'Settings', path: '/settings', icon: Settings },
-  { name: 'Proforma Invoice', path: '/proformainvoice', icon: Receipt },
+  { name: 'Proforma Invoice', path: '/proforma-invoice', icon: Receipt },
   { name: 'Invoice', path: '/invoice', icon: Receipt },
   { name: 'Products', path: '/products', icon: Package },
   { name: 'Payment Terms', path: '/payment-terms', icon: AlertCircle },

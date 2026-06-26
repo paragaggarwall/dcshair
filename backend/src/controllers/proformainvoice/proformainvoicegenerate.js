@@ -2,42 +2,8 @@
 const PDFDocument = require("pdfkit");
 const prisma = require("../../db");
 const fs = require("fs");
+const { log } = require("console");
 
-exports.getContractParties = async (req, res) => {
-  try {
-    const contractId = parseInt(req.params.contractId);
-
-    const allparty = await prisma.contract.findUnique({
-      where: { id: contractId },
-      include: {
-        consignee: true,
-        buyer: true,
-        notifyParty: true,
-        contactPerson: true,
-        termsOfPayment: true,
-        // products: true,
-        contractItems: {
-          include: {
-            product: true
-          },
-        }
-      }
-    });
-
-    res.json(allparty);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.proformainvoicepdf = async (req, res) => {
-  try {
-      generateProformaInvoice(req.body,res)
-  } catch (error) {
-    console.log(error,"generatepdferror");
-    
-  }
-};
 
 const PAGE_W = 595.28; // A4
 const PAGE_H = 841.89; // A4
@@ -66,7 +32,7 @@ const RIGHT_COL2_W = RIGHT_W - RIGHT_COL1_W;
 const COL1_W = IW * 0.65; // Marks / Description
 const COL2_W = IW * 0.10; // Qty KGS
 const COL3_W = IW * 0.10; // Rate
-const COL4_W = IW - COL1_W - COL2_W - COL3_W; 
+const COL4_W = IW - COL1_W - COL2_W - COL3_W;
 
 function textH(doc, text, width, fontSize = 8) {
     doc.fontSize(fontSize);
@@ -111,547 +77,869 @@ function fillRect(doc, x, y, w, h, color = "#e8e8e8") {
     doc.save().fillColor(color).rect(x, y, w, h).fill().restore();
 }
 
-function generateProformaInvoice(data, outputStream) {
+async function generateProformaInvoice(data, outputStream) {
     console.log("data", data);
-    const doc = new PDFDocument({ size: "A4", margin: 0, autoFirstPage: true });
-    doc.pipe(outputStream);
+    console.log("items", data.items);
 
-    // ── Outer border ──────────────────────────────
-    doc.rect(OUTER_MARGIN, OUTER_MARGIN, PAGE_W - OUTER_MARGIN * 2, PAGE_H - OUTER_MARGIN * 2).stroke();
+    const { customerId, consigneeId, notifyPartyId, termsOfPaymentId } = data;
 
-    // ── Title ─────────────────────────────────────
-    doc.font("Helvetica-Bold").fontSize(14).text("PROFORMA INVOICE", 0, OUTER_MARGIN + 6, { align: "center", width: PAGE_W });
+    const [customer, termsOfPayment] = await Promise.all([
+        prisma.customer.findUnique({
+            where: {
+                id: customerId,
+            },
+            include: {
+                consignees: {
+                    where: {
+                        id: consigneeId,
+                    },
+                },
+                notifyParties: {
+                    where: {
+                        id: notifyPartyId,
+                    },
+                },
+            },
+        }),
+        prisma.termsOfPayment.findUnique({
+            where: { id: termsOfPaymentId }
+        }),
+    ])
+    console.log("customer", customer, termsOfPayment);
+    return new Promise((resolve, reject) => {
 
-    const titleH = 28;
+        const doc = new PDFDocument({ size: "A4", margin: 0, autoFirstPage: true });
+        doc.pipe(outputStream);
 
-    // ── Inner border start ─────────────────────────
-    const innerStartY = OUTER_MARGIN + titleH;
+        // ── Outer border ──────────────────────────────
+        doc.rect(OUTER_MARGIN, OUTER_MARGIN, PAGE_W - OUTER_MARGIN * 2, PAGE_H - OUTER_MARGIN * 2).stroke();
 
-    // ─────────────────────────────────────────────
-    //  BUILD UPPER SECTION ROW HEIGHTS DYNAMICALLY
-    // ─────────────────────────────────────────────
+        // ── Title ─────────────────────────────────────
+        doc.font("Helvetica-Bold").fontSize(14).text("PROFORMA INVOICE", 0, OUTER_MARGIN + 6, { align: "center", width: PAGE_W });
 
-    const { consignee = {}, notifyParty = {}, buyer = {} } = data;
+        const titleH = 28;
 
-    const consigneeText = [
-        consignee.name,
-        consignee.address,
-        `USCI NUMBER: ${consignee.usci || ""}`,
-        `CTC: ${consignee.ctc || ""}  TEL: ${consignee.phone || ""}`,
-        consignee.country,
-    ].filter(Boolean).join("\n");
+        // ── Inner border start ─────────────────────────
+        const innerStartY = OUTER_MARGIN + titleH;
 
-    const notifyText = [
-        notifyParty.name,
-        notifyParty.address,
-        `USCI NUMBER: ${notifyParty.usci || ""}`,
-        `CTC: ${notifyParty.ctc || ""}  TEL: ${notifyParty.phone || ""}`,
-        notifyParty.country,
-    ].filter(Boolean).join("\n");
+        // ─────────────────────────────────────────────
+        //  BUILD UPPER SECTION ROW HEIGHTS DYNAMICALLY
+        // ─────────────────────────────────────────────
 
-    const buyerText = [
-        buyer.name,
-        buyer.address,
-        `USCI NUMBER: ${buyer.usci || ""}`,
-        `CTC: ${buyer.ctc || ""}  TEL: ${buyer.phone || ""}`,
-        buyer.country,
-    ].filter(Boolean).join("\n");
+        const { id: customerId } = customer;
+        const consignees = customer.consignees[0] || []
+        const notifyParties = customer.notifyParties[0] || []
 
-    // ── LEFT COLUMN ROW HEIGHTS ────────────────────
 
-    // Row 1: Exporter (left) | rows 1-3 right
-    let expH = PAD;
-    doc.font("Helvetica").fontSize(7);
-    expH += doc.heightOfString("Exporter", { width: LEFT_W - PAD * 2 }) + 20;
-    doc.font("Helvetica-Bold").fontSize(10);
-    expH += doc.heightOfString("DCS INTERNATIONAL TRADING COMPANY", { width: LEFT_W - PAD * 2 }) + 10;
-    doc.font("Helvetica-Bold").fontSize(8);
-    expH += doc.heightOfString("PLOT NO. 81-B, BASEMENT & GROUNG FLOOR, SECTOR-5, IMT MANESAR, GURUGRAM", { width: LEFT_W - PAD * 2 }) + 10;
-    expH += doc.heightOfString("HARYANA-122052(INDIA)\nTel. :+91-012-44068177 Fax. : ", { width: LEFT_W - PAD * 2 });
-    expH += PAD;
-    const exporterH = expH;
+        const consigneeText = [
+            consignees.name,
+            consignees.address,
+            `USCI NUMBER: ${consignees.usci || ""}`,
+            `CTC: ${consignees.ctc || ""}  TEL: ${consignees.phone || ""}`,
+            consignees.country,
+        ].filter(Boolean).join("\n");
 
-    // Right rows 1-3 stacked (must match exporter height together)
-    const invoiceLabel = `${data.invoiceNo || ""} - ${data.invoiceDate || ""}`;
-    const r1LeftH = measureCell(doc, "Proforma Invoice No. & Date", invoiceLabel, RIGHT_COL1_W);
-    const r1RightH = measureCell(doc, "Exporter's Ref.", data.exporterRef || "", RIGHT_COL2_W);
-    const row1RightH = Math.max(r1LeftH, r1RightH);
+        const notifyText = [
+            notifyParties.name,
+            notifyParties.address,
+            `USCI NUMBER: ${notifyParties.usci || ""}`,
+            `CTC: ${notifyParties.ctc || ""}  TEL: ${notifyParties.phone || ""}`,
+            notifyParties.country,
+        ].filter(Boolean).join("\n");
 
-    const buyerOrderLabel = `${data.buyerOrderNo || ""}  ${data.buyerOrderDate || ""}`.trim();
-    const lcLabel = `${data.lcnumber || ""}  ${data.lcDate || ""}`.trim();
-    const r2LeftH = measureCell(doc, "Buyer's Order No. & Date", buyerOrderLabel, RIGHT_COL1_W);
-    const r2RightH = measureCell(doc, "L/C No. & Date", lcLabel, RIGHT_COL2_W);
-    const row2RightH = Math.max(r2LeftH, r2RightH);
+        const buyerText = [
+            customer.name,
+            customer.address,
+            `USCI NUMBER: ${customer.usci || ""}`,
+            `CTC: ${customer.ctc || ""}  TEL: ${customer.phone || ""}`,
+            customer.country,
+        ].filter(Boolean).join("\n");
 
-    const row3RightH = measureCell(doc, "Other Reference(s)", data.otherRef || "", RIGHT_W);
+        // ── LEFT COLUMN ROW HEIGHTS ────────────────────
 
-    const rightTop3H = row1RightH + row2RightH + row3RightH;
-    const leftRow1H = Math.max(exporterH, rightTop3H);
+        // Row 1: Exporter (left) | rows 1-3 right
+        let expH = PAD;
+        doc.font("Helvetica").fontSize(7);
+        expH += doc.heightOfString("Exporter", { width: LEFT_W - PAD * 2 }) + 20;
+        doc.font("Helvetica-Bold").fontSize(10);
+        expH += doc.heightOfString("DCS INTERNATIONAL TRADING COMPANY", { width: LEFT_W - PAD * 2 }) + 10;
+        doc.font("Helvetica-Bold").fontSize(8);
+        expH += doc.heightOfString("PLOT NO. 81-B, BASEMENT & GROUNG FLOOR, SECTOR-5, IMT MANESAR, GURUGRAM", { width: LEFT_W - PAD * 2 }) + 10;
+        expH += doc.heightOfString("HARYANA-122052(INDIA)\nTel. :+91-012-44068177 Fax. : ", { width: LEFT_W - PAD * 2 });
+        expH += PAD;
+        const exporterH = expH;
 
-    // Row 2: Consignee (left) | Buyer (right)
-    const consigneeH = measureCell(doc, "Consignee", consigneeText, LEFT_W);
-    const buyerH = measureCell(doc, "Buyer (other than consignee)", buyerText, RIGHT_W);
-    const leftRow2H = Math.max(consigneeH, buyerH);
+        // Right rows 1-3 stacked (must match exporter height together)
+        const invoiceLabel = `${data.proformaInvoiceNo || ""} - ${data.proformaInvoiceDate || ""}`;
+        const r1LeftH = measureCell(doc, "Proforma Invoice No. & Date", invoiceLabel, RIGHT_COL1_W);
+        const r1RightH = measureCell(doc, "Exporter's Ref.", data.exporterRef || "", RIGHT_COL2_W);
+        const row1RightH = Math.max(r1LeftH, r1RightH);
 
-    // Row 3: Notify Party (left) | Country of Origin / Destination (right) + Terms
-    const notifyH = measureCell(doc, "Notify Party", notifyText, LEFT_W);
-    const coOrgH = measureCell(doc, "Country of Origin of Goods", data.countryOfOrigin || "", RIGHT_COL1_W);
-    const coDestH = measureCell(doc, "Country of Final Destination", data.countryOfFinalDestination || "", RIGHT_COL2_W);
-    const countryRowH = Math.max(coOrgH, coDestH);
-    const termsH = measureCell(doc, "Terms of Delivery and Payment", data.deliveryTerms || "", RIGHT_W);
-    const rightRow3H = countryRowH + termsH;
-    const leftRow3H = Math.max(notifyH, rightRow3H);
+        const buyerOrderLabel = `${customer.id || ""}  ${data.createdAt || ""}`.trim();
+        const lcLabel = `${data.lcNumber || ""}  ${data.lcDate || ""}`.trim();
+        const r2LeftH = measureCell(doc, "Buyer's Order No. & Date", buyerOrderLabel, RIGHT_COL1_W);
+        const r2RightH = measureCell(doc, "L/C No. & Date", lcLabel, RIGHT_COL2_W);
+        const row2RightH = Math.max(r2LeftH, r2RightH);
 
-    // Row 4 (shipping grid) — spans FULL WIDTH, split into left and right halves
-    // Left half: Pre-Carriage By, Vessel/Flight No., Port of Discharge
-    // Right half: Place of Receipt by Pre-carrier, Port of Loading, Final Destination
-    // Both halves have 3 sub-rows each; right column (Terms) area stays blank
-    const shippingLabels1 = ["Pre-Carriage By", "Vessel / Flight No.", "Port of Discharge"];
-    const shippingVals1 = [data.preCarriageBy || "", data.airline_no || "", data.portOfFinalDestination || ""];
-    const shippingLabels2 = ["Place of Receipt by Pre-carrier", "Port of Loading", "Final Destination"];
-    const shippingVals2 = [data.portOfLoading || "", data.portOfLoading || "", data.portOfFinalDestination || ""];
+        const row3RightH = measureCell(doc, "Other Reference(s)", data.otherRefrence || "", RIGHT_W);
 
-    // Shipping sub-cols split at midpoint of the left column
-    const shipMidX = IX + LEFT_W / 2;
-    const shipLeftW = LEFT_W / 2;
-    const shipRightW = LEFT_W / 2;
+        const rightTop3H = row1RightH + row2RightH + row3RightH;
+        const leftRow1H = Math.max(exporterH, rightTop3H);
 
-    // Shipping row height = tallest of each of the 3 sub-rows
-    const shipSubH = shippingLabels1.map((lbl, i) => {
-        const lH = measureCell(doc, lbl, shippingVals1[i], shipLeftW);
-        const rH = measureCell(doc, shippingLabels2[i], shippingVals2[i], shipRightW);
-        return Math.max(lH, rH);
-    });
-    const leftRow4H = shipSubH.reduce((a, b) => a + b, 0);
+        // Row 2: Consignee (left) | Buyer (right)
+        const consigneeH = measureCell(doc, "Consignee", consigneeText, LEFT_W);
+        const buyerH = measureCell(doc, "Buyer (other than consignee)", buyerText, RIGHT_W);
+        const leftRow2H = Math.max(consigneeH, buyerH);
 
-    // ─────────────────────────────────────────────
-    //  DRAW UPPER SECTION
-    // ─────────────────────────────────────────────
-    let curY = innerStartY;
+        // Row 3: Notify Party (left) | Country of Origin / Destination (right) + Terms
+        const notifyH = measureCell(doc, "Notify Party", notifyText, LEFT_W);
+        const coOrgH = measureCell(doc, "Country of Origin of Goods", data.countryOfOrigin || "", RIGHT_COL1_W);
+        const coDestH = measureCell(doc, "Country of Final Destination", data.countryOfDestination || "", RIGHT_COL2_W);
+        const countryRowH = Math.max(coOrgH, coDestH);
+        const termsH = measureCell(doc, "Terms of Delivery and Payment", data.deliveryTerms || "", RIGHT_W);
+        const rightRow3H = countryRowH + termsH;
+        const leftRow3H = Math.max(notifyH, rightRow3H);
 
-    // ── ROW 1 ──────────────────────────────────────
-    const row1Top = curY;
-    const row1Bot = curY + leftRow1H;
+        // Row 4 (shipping grid) — spans FULL WIDTH, split into left and right halves
+        // Left half: Pre-Carriage By, Vessel/Flight No., Port of Discharge
+        // Right half: Place of Receipt by Pre-carrier, Port of Loading, Final Destination
+        // Both halves have 3 sub-rows each; right column (Terms) area stays blank
+        const shippingLabels1 = ["Pre-Carriage By", "Vessel / Flight No.", "Port of Discharge"];
+        const shippingVals1 = [data.preCarriageBy || "", data.operatingAirlines || "", data.portOfFinalDestination || ""];
+        const shippingLabels2 = ["Place of Receipt by Pre-carrier", "Port of Loading", "Final Destination"];
+        const shippingVals2 = [data.portOfLoading || "", data.portOfLoading || "", data.portOfFinalDestination || ""];
 
-    // Exporter cell (left)
-    let eY = row1Top + PAD;
-    doc.font("Helvetica").fontSize(7).text("Exporter", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
-    eY += doc.heightOfString("Exporter", { width: LEFT_W - PAD * 2 }) + 20;
+        // Shipping sub-cols split at midpoint of the left column
+        const shipMidX = IX + LEFT_W / 2;
+        const shipLeftW = LEFT_W / 2;
+        const shipRightW = LEFT_W / 2;
 
-    doc.font("Helvetica-Bold").fontSize(10).text("DCS INTERNATIONAL TRADING COMPANY", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
-    eY += doc.heightOfString("DCS INTERNATIONAL TRADING COMPANY", { width: LEFT_W - PAD * 2 }) + 10;
+        // Shipping row height = tallest of each of the 3 sub-rows
+        const shipSubH = shippingLabels1.map((lbl, i) => {
+            const lH = measureCell(doc, lbl, shippingVals1[i], shipLeftW);
+            const rH = measureCell(doc, shippingLabels2[i], shippingVals2[i], shipRightW);
+            return Math.max(lH, rH);
+        });
+        const leftRow4H = shipSubH.reduce((a, b) => a + b, 0);
 
-    doc.font("Helvetica-Bold").fontSize(8).text("PLOT NO. 81-B, BASEMENT & GROUND FLOOR, SECTOR-5, IMT MANESAR, GURUGRAM", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
-    eY += doc.heightOfString("PLOT NO. 81-B, BASEMENT & GROUND FLOOR, SECTOR-5, IMT MANESAR, GURUGRAM", { width: LEFT_W - PAD * 2 }) + 10;
+        // ─────────────────────────────────────────────
+        //  DRAW UPPER SECTION
+        // ─────────────────────────────────────────────
+        let curY = innerStartY;
 
-    doc.font("Helvetica-Bold").fontSize(8).text("HARYANA-122052(INDIA)\nTel. :+91-012-44068177 Fax. : ", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
+        // ── ROW 1 ──────────────────────────────────────
+        const row1Top = curY;
+        const row1Bot = curY + leftRow1H;
 
-    // GST NO. (top right of Exporter cell)
-    const gstBoxW = 100;
-    const gstBoxX = IX + LEFT_W - gstBoxW - PAD * 2;
-    doc.font("Helvetica-Bold").fontSize(7).text("GST NO. :", gstBoxX, row1Top + PAD, { width: gstBoxW, align: "center" });
-    doc.font("Helvetica-Bold").fontSize(8).text("06ABJPS8963LIZR", gstBoxX, row1Top + PAD + 9, { width: gstBoxW, align: "center" });
+        // Exporter cell (left)
+        let eY = row1Top + PAD;
+        doc.font("Helvetica").fontSize(7).text("Exporter", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
+        eY += doc.heightOfString("Exporter", { width: LEFT_W - PAD * 2 }) + 20;
 
-    // Right col vertical divider
-    vLine(doc, RIGHT_X, row1Top, row1Bot);
+        doc.font("Helvetica-Bold").fontSize(10).text("DCS INTERNATIONAL TRADING COMPANY", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
+        eY += doc.heightOfString("DCS INTERNATIONAL TRADING COMPANY", { width: LEFT_W - PAD * 2 }) + 10;
 
-    // Right sub-row 1
-    const sub1Top = row1Top;
-    const sub1Bot = sub1Top + row1RightH;
-    cellContent(doc, "Proforma Invoice No. & Date", invoiceLabel, RIGHT_X, sub1Top, RIGHT_COL1_W);
-    vLine(doc, RIGHT_COL2_X, sub1Top, sub1Bot);
-    cellContent(doc, "Exporter's Ref.", data.exporterRef || "", RIGHT_COL2_X, sub1Top, RIGHT_COL2_W);
-    hLineScoped(doc, sub1Bot, RIGHT_X, IX + IW); // scoped to right column only
+        doc.font("Helvetica-Bold").fontSize(8).text("PLOT NO. 81-B, BASEMENT & GROUND FLOOR, SECTOR-5, IMT MANESAR, GURUGRAM", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
+        eY += doc.heightOfString("PLOT NO. 81-B, BASEMENT & GROUND FLOOR, SECTOR-5, IMT MANESAR, GURUGRAM", { width: LEFT_W - PAD * 2 }) + 10;
 
-    // Right sub-row 2
-    const sub2Top = sub1Bot;
-    const sub2Bot = sub2Top + row2RightH;
-    cellContent(doc, "Buyer's Order No. & Date", buyerOrderLabel, RIGHT_X, sub2Top, RIGHT_COL1_W);
-    // vLine(doc, RIGHT_COL2_X, sub2Top, sub2Bot);
-    cellContent(doc, "L/C No. & Date", lcLabel, RIGHT_COL2_X, sub2Top, RIGHT_COL2_W);
-    hLineScoped(doc, sub2Bot, RIGHT_X, IX + IW); // scoped to right column only
+        doc.font("Helvetica-Bold").fontSize(8).text("HARYANA-122052(INDIA)\nTel. :+91-012-44068177 Fax. : ", IX + PAD, eY, { width: LEFT_W - PAD * 2 });
 
-    // Right sub-row 3
-    const sub3Top = sub2Bot;
-    const sub3Bot = sub3Top + row3RightH;
-    cellContent(doc, "Other Reference(s)", data.otherRef || "", RIGHT_X, sub3Top, RIGHT_W);
+        // GST NO. (top right of Exporter cell)
+        const gstBoxW = 100;
+        const gstBoxX = IX + LEFT_W - gstBoxW - PAD * 2;
+        doc.font("Helvetica-Bold").fontSize(7).text("GST NO. :", gstBoxX, row1Top + PAD, { width: gstBoxW, align: "center" });
+        doc.font("Helvetica-Bold").fontSize(8).text("06ABJPS8963LIZR", gstBoxX, row1Top + PAD + 9, { width: gstBoxW, align: "center" });
 
-    // Make sure right col 3 bottom aligns with row1Bot
-    hLine(doc, row1Bot);
-    curY = row1Bot;
+        // Right col vertical divider
+        vLine(doc, RIGHT_X, row1Top, row1Bot);
 
-    // ── ROW 2 ──────────────────────────────────────
-    const row2Top = curY;
-    const row2Bot = curY + leftRow2H;
+        // Right sub-row 1
+        const sub1Top = row1Top;
+        const sub1Bot = sub1Top + row1RightH;
+        cellContent(doc, "Proforma Invoice No. & Date", invoiceLabel, RIGHT_X, sub1Top, RIGHT_COL1_W);
+        vLine(doc, RIGHT_COL2_X, sub1Top, sub1Bot);
+        cellContent(doc, "Exporter's Ref.", data.exporterRef || "", RIGHT_COL2_X, sub1Top, RIGHT_COL2_W);
+        hLineScoped(doc, sub1Bot, RIGHT_X, IX + IW); // scoped to right column only
 
-    cellContent(doc, "Consignee", consigneeText, IX, row2Top, LEFT_W);
-    vLine(doc, RIGHT_X, row2Top, row2Bot);
-    cellContent(doc, "Buyer (other than consignee)", buyerText, RIGHT_X, row2Top, RIGHT_W);
+        // Right sub-row 2
+        const sub2Top = sub1Bot;
+        const sub2Bot = sub2Top + row2RightH;
+        cellContent(doc, "Buyer's Order No. & Date", buyerOrderLabel, RIGHT_X, sub2Top, RIGHT_COL1_W);
+        // vLine(doc, RIGHT_COL2_X, sub2Top, sub2Bot);
+        cellContent(doc, "L/C No. & Date", lcLabel, RIGHT_COL2_X, sub2Top, RIGHT_COL2_W);
+        hLineScoped(doc, sub2Bot, RIGHT_X, IX + IW); // scoped to right column only
 
-    hLine(doc, row2Bot);
-    curY = row2Bot;
+        // Right sub-row 3
+        const sub3Top = sub2Bot;
+        const sub3Bot = sub3Top + row3RightH;
+        cellContent(doc, "Other Reference(s)", data.otherRefrence || "", RIGHT_X, sub3Top, RIGHT_W);
 
-    // ── ROW 3 ──────────────────────────────────────
-    const row3Top = curY;
-    const row3Bot = curY + leftRow3H;
+        // Make sure right col 3 bottom aligns with row1Bot
+        hLine(doc, row1Bot);
+        curY = row1Bot;
 
-    cellContent(doc, "Notify Party", notifyText, IX, row3Top, LEFT_W);
-    vLine(doc, RIGHT_X, row3Top, row3Bot);
+        // ── ROW 2 ──────────────────────────────────────
+        const row2Top = curY;
+        const row2Bot = curY + leftRow2H;
 
-    // Country sub-row
-    const cTop = row3Top;
-    const cBot = cTop + countryRowH;
-    cellContent(doc, "Country of Origin of Goods", data.countryOfOrigin || "", RIGHT_X, cTop, RIGHT_COL1_W);
-    vLine(doc, RIGHT_COL2_X, cTop, cBot);
-    cellContent(doc, "Country of Final Destination", data.countryOfFinalDestination || "", RIGHT_COL2_X, cTop, RIGHT_COL2_W);
-    hLineScoped(doc, cBot, RIGHT_X, IX + IW); // scoped to right column only
+        cellContent(doc, "Consignee", consigneeText, IX, row2Top, LEFT_W);
+        vLine(doc, RIGHT_X, row2Top, row2Bot);
+        cellContent(doc, "Buyer (other than consignee)", buyerText, RIGHT_X, row2Top, RIGHT_W);
 
-    // Terms sub-row
-    const tTop = cBot;
-    cellContent(doc, "Terms of Delivery and Payment", data.termsOfPayment.name || "", RIGHT_X, tTop, RIGHT_W);
+        hLine(doc, row2Bot);
+        curY = row2Bot;
 
-    // hLine(doc, row3Bot);
-    hLineScoped(doc, row3Bot, IX, RIGHT_X);
-    curY = row3Bot;
+        // ── ROW 3 ──────────────────────────────────────
+        const row3Top = curY;
+        const row3Bot = curY + leftRow3H;
 
-    // ── ROW 4 (Shipping grid) ──────────────────────
-    const row4Top = curY;
+        cellContent(doc, "Notify Party", notifyText, IX, row3Top, LEFT_W);
+        vLine(doc, RIGHT_X, row3Top, row3Bot);
 
-    let shipY = row4Top;
-    shippingLabels1.forEach((lbl, i) => {
-        const rH = shipSubH[i];
-        const rowBot = shipY + rH;
+        // Country sub-row
+        const cTop = row3Top;
+        const cBot = cTop + countryRowH;
+        cellContent(doc, "Country of Origin of Goods", data.countryOfOrigin || "", RIGHT_X, cTop, RIGHT_COL1_W);
+        vLine(doc, RIGHT_COL2_X, cTop, cBot);
+        cellContent(doc, "Country of Final Destination", data.countryOfDestination || "", RIGHT_COL2_X, cTop, RIGHT_COL2_W);
+        hLineScoped(doc, cBot, RIGHT_X, IX + IW); // scoped to right column only
 
-        cellContent(doc, lbl, shippingVals1[i], IX, shipY, shipLeftW);
-        vLine(doc, shipMidX, shipY, rowBot);
-        cellContent(doc, shippingLabels2[i], shippingVals2[i], shipMidX, shipY, shipRightW);
-        vLine(doc, RIGHT_X, shipY, rowBot);
+        // Terms sub-row
+        const tTop = cBot;
+        cellContent(doc, "Terms of Delivery and Payment", termsOfPayment.name || "", RIGHT_X, tTop, RIGHT_W);
 
-        if (i < shippingLabels1.length - 1) {
-            hLineScoped(doc, rowBot, IX, RIGHT_X);
+        // hLine(doc, row3Bot);
+        hLineScoped(doc, row3Bot, IX, RIGHT_X);
+        curY = row3Bot;
+
+        // ── ROW 4 (Shipping grid) ──────────────────────
+        const row4Top = curY;
+
+        let shipY = row4Top;
+        shippingLabels1.forEach((lbl, i) => {
+            const rH = shipSubH[i];
+            const rowBot = shipY + rH;
+
+            cellContent(doc, lbl, shippingVals1[i], IX, shipY, shipLeftW);
+            vLine(doc, shipMidX, shipY, rowBot);
+            cellContent(doc, shippingLabels2[i], shippingVals2[i], shipMidX, shipY, shipRightW);
+            vLine(doc, RIGHT_X, shipY, rowBot);
+
+            if (i < shippingLabels1.length - 1) {
+                hLineScoped(doc, rowBot, IX, RIGHT_X);
+            }
+            shipY = rowBot;
+        });
+
+        const row4Bot = shipY;
+        hLine(doc, row4Bot);
+        curY = row4Bot;
+
+        // ─────────────────────────────────────────────
+        //  LOWER SECTION — GOODS TABLE
+        // ─────────────────────────────────────────────
+        const tableTop = curY;
+
+        // Column X positions
+        const col1X = IX;
+        const col2X = col1X + COL1_W;
+        const col3X = col2X + COL2_W;
+        const col4X = col3X + COL3_W;
+
+        // Header row
+        doc.font("Helvetica-Bold").fontSize(7);
+        const headerParts = [
+            { label: "Marks & No. / Container No.\nNo. & Kind of Pkgs\nDescription of Goods", x: col1X, w: COL1_W },
+            { label: "Quantity\nKGS", x: col2X, w: COL2_W },
+            { label: "Rate\nUS$/KGS", x: col3X, w: COL3_W },
+            { label: "Amount\nUS$", x: col4X, w: COL4_W },
+        ];
+
+        // const headerH = headerParts.reduce((max, p) => {
+        //     const h = doc.heightOfString(p.label, { width: p.w - PAD * 2 }) + PAD * 2;
+        //     return Math.max(max, h);
+        // }, 0);
+        const headerH = 58;
+
+        // Draw header background
+        fillRect(doc, IX, tableTop, IW, headerH, "#d0d0d0");
+        hLine(doc, tableTop);
+
+        headerParts.forEach((p, idx) => {
+
+            // FIRST COLUMN HEADER
+            if (idx === 0) {
+                // Dynamic widths INSIDE first column
+                const marksW = p.w * 0.18;
+                const pkgW = p.w * 0.24;
+                const descW = p.w * 0.43;
+                const sizeW = p.w * 0.15;
+
+                // X positions
+                const marksX = p.x;
+                const pkgX = marksX + marksW;
+                const descX = pkgX + pkgW;
+                const sizeX = descX + descW;
+
+                // Y positions
+                const topY = tableTop + 6;
+                const subY = topY + 18;
+                const valueY = subY + 12;
+
+                doc.font("Helvetica-Bold").fontSize(7);
+
+                // ─────────────────────────────
+                // TOP HEADINGS
+                // ─────────────────────────────
+
+                // Marks & No.
+                doc.text(
+                    "Marks & No.",
+                    marksX,
+                    topY,
+                    {
+                        width: marksW,
+                        align: "center",
+                    }
+                );
+
+                // No. & Kind of Pkgs
+                doc.text(
+                    "No. & Kind of Pkgs",
+                    pkgX,
+                    topY,
+                    {
+                        width: pkgW,
+                        align: "center",
+                    }
+                );
+
+                // Description of Goods
+                doc.text(
+                    "Description of Goods",
+                    descX,
+                    topY,
+                    {
+                        width: descW,
+                        align: "center",
+                    }
+                );
+
+                // SIZE
+                doc.text(
+                    "SIZE",
+                    sizeX,
+                    topY,
+                    {
+                        width: sizeW,
+                        align: "center",
+                    }
+                );
+
+                // ─────────────────────────────
+                // SUB HEADINGS 
+                // ─────────────────────────────
+
+                doc.font("Helvetica").fontSize(6.5);
+
+                // Container No. heading
+                doc.text(
+                    "Container No.",
+                    marksX,
+                    subY,
+                    {
+                        width: marksW,
+                        align: "center",
+                    }
+                );
+
+                // Carton count
+                doc.text(
+                    data.pkgCount,
+                    pkgX,
+                    subY,
+                    {
+                        width: pkgW,
+                        align: "center",
+                    }
+                );
+                // ─────────────────────────
+                // VALUES BELOW SUBHEADINGS
+                // ─────────────────────────
+
+                doc.font("Helvetica-Bold").fontSize(7);
+
+                doc.text(
+                    data.containerNo,
+                    marksX,
+                    valueY,
+                    {
+                        width: marksW,
+                        align: "center",
+                    }
+                );
+
+                doc.text(
+                    data.containerRange,
+                    marksX,
+                    valueY + 10,
+                    {
+                        width: marksW,
+                        align: "center",
+                    }
+                );
+
+            } else {
+
+                // OTHER HEADERS
+                doc.font("Helvetica-Bold").fontSize(7).text(
+                    p.label,
+                    p.x + PAD,
+                    tableTop + PAD,
+                    {
+                        width: p.w - PAD * 2,
+                        align: "center",
+                    }
+                );
+            }
+        });
+
+        let rowY = tableTop + headerH;
+
+        // Vertical dividers for header
+        [col2X, col3X, col4X].forEach((x) => vLine(doc, x, tableTop, rowY));
+        hLine(doc, rowY);
+
+        // ── Item rows ─────────────────────────────────
+        const items = data.items || [];
+
+
+        // We'll draw the description in col1, but marks text stacked above
+        const descText = data.description || "";
+
+        const descH = descText
+            ? (doc.font("Helvetica").fontSize(8).heightOfString(descText, { width: COL1_W - PAD * 2 }) + 8)
+            : 0;
+
+        // Compute heights for each item line
+        const itemHeights = items.map((item) => {
+            return (
+                doc
+                    .font("Helvetica")
+                    .fontSize(8)
+                    .heightOfString(
+                        String(item.product.size || item.product.name || ""),
+                        {
+                            width: COL1_W - PAD * 2,
+                        }
+                    ) + 6
+            );
+        });
+
+        // Total content height
+        const totalItemsH = itemHeights.reduce((a, b) => a + b, 0);
+
+        // Final table body height
+        const tableContentH = Math.max(
+            220,
+            descH + totalItemsH + 20
+        );
+
+        const tableBottomY = rowY + tableContentH;
+
+
+        // Calculate total content height for col1
+        let contentY = rowY + PAD;
+
+
+        // Draw description
+        if (descText) {
+            doc.font("Helvetica-Bold").fontSize(8).text(descText, col1X + PAD, contentY, { width: COL1_W - PAD * 2 });
+            contentY += descH;
         }
-        shipY = rowBot;
-    });
 
-    const row4Bot = shipY;
-    hLine(doc, row4Bot);
-    curY = row4Bot;
+        // Draw item rows (right cols) side by side with items in col1
+        const itemRowStartY = contentY + 4;
 
-    // ─────────────────────────────────────────────
-    //  LOWER SECTION — GOODS TABLE
-    // ─────────────────────────────────────────────
-    const tableTop = curY;
-
-    // Column X positions
-    const col1X = IX;
-    const col2X = col1X + COL1_W;
-    const col3X = col2X + COL2_W;
-    const col4X = col3X + COL3_W;
-
-    // Header row
-    doc.font("Helvetica-Bold").fontSize(7);
-    const headerParts = [
-        { label: "Marks & No. / Container No.\nNo. & Kind of Pkgs\nDescription of Goods", x: col1X, w: COL1_W },
-        { label: "Quantity\nKGS", x: col2X, w: COL2_W },
-        { label: "Rate\nUS$/KGS", x: col3X, w: COL3_W },
-        { label: "Amount\nUS$", x: col4X, w: COL4_W },
-    ];
-
-    // const headerH = headerParts.reduce((max, p) => {
-    //     const h = doc.heightOfString(p.label, { width: p.w - PAD * 2 }) + PAD * 2;
-    //     return Math.max(max, h);
-    // }, 0);
-    const headerH = 58;
-
-    // Draw header background
-    fillRect(doc, IX, tableTop, IW, headerH, "#d0d0d0");
-    hLine(doc, tableTop);
-
-    headerParts.forEach((p, idx) => {
-
-        // FIRST COLUMN HEADER
-        if (idx === 0) {
-            // Dynamic widths INSIDE first column
-            const marksW = p.w * 0.18;
-            const pkgW = p.w * 0.24;
-            const descW = p.w * 0.43;
-            const sizeW = p.w * 0.15;
-
-            // X positions
-            const marksX = p.x;
-            const pkgX = marksX + marksW;
-            const descX = pkgX + pkgW;
-            const sizeX = descX + descW;
-
-            // Y positions
-            const topY = tableTop + 6;
-            const subY = topY + 18;
-            const valueY = subY + 12;
-
-            doc.font("Helvetica-Bold").fontSize(7);
-
-            // ─────────────────────────────
-            // TOP HEADINGS
-            // ─────────────────────────────
-
-            // Marks & No.
-            doc.text(
-                "Marks & No.",
-                marksX,
-                topY,
-                {
-                    width: marksW,
-                    align: "center",
-                }
-            );
-
-            // No. & Kind of Pkgs
-            doc.text(
-                "No. & Kind of Pkgs",
-                pkgX,
-                topY,
-                {
-                    width: pkgW,
-                    align: "center",
-                }
-            );
-
-            // Description of Goods
-            doc.text(
-                "Description of Goods",
-                descX,
-                topY,
-                {
-                    width: descW,
-                    align: "center",
-                }
-            );
+        items.forEach((item, i) => {
+            const itemY =
+                itemRowStartY +
+                itemHeights
+                    .slice(0, i)
+                    .reduce((a, b) => a + b, 0);
 
             // SIZE
-            doc.text(
-                "SIZE",
-                sizeX,
-                topY,
+            doc.font("Helvetica").fontSize(8).text(
+                String(item.product.name || ""),
+                col1X + PAD,
+                itemY,
                 {
-                    width: sizeW,
+                    width: COL1_W,
+                    align: "left",
+                }
+            );
+
+            // QTY
+            doc.font("Helvetica").fontSize(8).text(
+                String(item.quantity || ""),
+                col2X + PAD,
+                itemY,
+                {
+                    width: COL2_W - PAD * 2,
                     align: "center",
                 }
             );
 
-            // ─────────────────────────────
-            // SUB HEADINGS 
-            // ─────────────────────────────
-
-            doc.font("Helvetica").fontSize(6.5);
-
-            // Container No. heading
-            doc.text(
-                "Container No.",
-                marksX,
-                subY,
+            // RATE
+            doc.font("Helvetica").fontSize(8).text(
+                String(item.pricePerKg || ""),
+                col3X + PAD,
+                itemY,
                 {
-                    width: marksW,
+                    width: COL3_W - PAD * 2,
                     align: "center",
                 }
             );
 
-            // Carton count
-            doc.text(
-                data.pkgCount,
-                pkgX,
-                subY,
+            // AMOUNT
+            doc.font("Helvetica").fontSize(8).text(
+                Number((item.quantity * item.pricePerKg) || 0).toFixed(2),
+                col4X + PAD,
+                itemY,
                 {
-                    width: pkgW,
-                    align: "center",
+                    width: COL4_W - PAD * 2,
+                    align: "right",
                 }
             );
-            // ─────────────────────────
-            // VALUES BELOW SUBHEADINGS
-            // ─────────────────────────
+        });
 
-            doc.font("Helvetica-Bold").fontSize(7);
+        // const totalItemsH = itemHeights.reduce((a, b) => a + b, 0);
+        // const tableContentH = marksH + descH + totalItemsH + PAD * 2;
+        // const tableContentH2 = Math.max(tableContentH, 200); // minimum height for lower section
 
-            doc.text(
-                data.containerNo,
-                marksX,
-                valueY,
-                {
-                    width: marksW,
-                    align: "center",
-                }
-            );
+        // const tableBottomY = rowY + tableContentH2;
 
-            doc.text(
-                data.containerRange,
-                marksX,
-                valueY + 10,
-                {
-                    width: marksW,
-                    align: "center",
-                }
-            );
+        // Vertical dividers for table content
+        [col2X, col3X, col4X].forEach((x) => vLine(doc, x, rowY, tableBottomY));
 
-        } else {
+        hLine(doc, tableBottomY);
 
-            // OTHER HEADERS
-            doc.font("Helvetica-Bold").fontSize(7).text(
-                p.label,
-                p.x + PAD,
-                tableTop + PAD,
-                {
-                    width: p.w - PAD * 2,
-                    align: "center",
-                }
-            );
-        }
-    });
+        // Total row
+        const totalH = 20;
+        const grandTotal = items.reduce((sum, item) => sum + Number((item.quantity * item.pricePerKg) || 0), 0);
 
-    let rowY = tableTop + headerH;
-
-    // Vertical dividers for header
-    [col2X, col3X, col4X].forEach((x) => vLine(doc, x, tableTop, rowY));
-    hLine(doc, rowY);
-
-    // ── Item rows ─────────────────────────────────
-    const items = data.items || [];
-
-
-    // We'll draw the description in col1, but marks text stacked above
-    const descText = data.description || "";
-
-    const descH = descText
-        ? (doc.font("Helvetica").fontSize(8).heightOfString(descText, { width: COL1_W - PAD * 2 }) + 8)
-        : 0;
-
-    // Compute heights for each item line
-    const itemHeights = items.map((item) => {
-        return (
-            doc
-                .font("Helvetica")
-                .fontSize(8)
-                .heightOfString(
-                    String(item.size || item.name || ""),
-                    {
-                        width: COL1_W - PAD * 2,
-                    }
-                ) + 6
-        );
-    });
-
-    // Total content height
-    const totalItemsH = itemHeights.reduce((a, b) => a + b, 0);
-
-    // Final table body height
-    const tableContentH = Math.max(
-        220,
-        descH + totalItemsH + 20
-    );
-
-    const tableBottomY = rowY + tableContentH;
-
-
-    // Calculate total content height for col1
-    let contentY = rowY + PAD;
-
-
-    // Draw description
-    if (descText) {
-        doc.font("Helvetica-Bold").fontSize(8).text(descText, col1X + PAD, contentY, { width: COL1_W - PAD * 2 });
-        contentY += descH;
-    }
-
-    // Draw item rows (right cols) side by side with items in col1
-    const itemRowStartY = contentY + 4;
-
-    items.forEach((item, i) => {
-        const itemY =
-            itemRowStartY +
-            itemHeights
-                .slice(0, i)
-                .reduce((a, b) => a + b, 0);
-
-        // SIZE
-        doc.font("Helvetica").fontSize(8).text(
-            String( item.name || ""),
-            col1X + PAD,
-            itemY,
-            {
-                width: COL1_W,
-                align: "left",
-            }
-        );
-
-        // QTY
-        doc.font("Helvetica").fontSize(8).text(
-            String(item.quantity || ""),
-            col2X + PAD,
-            itemY,
-            {
-                width: COL2_W - PAD * 2,
-                align: "center",
-            }
-        );
-
-        // RATE
-        doc.font("Helvetica").fontSize(8).text(
-            String(item.pricePerKg || ""),
+        doc.font("Helvetica-Bold").fontSize(9).text(
+            `TOTAL USD ${grandTotal.toFixed(2)}`,
             col3X + PAD,
-            itemY,
-            {
-                width: COL3_W - PAD * 2,
-                align: "center",
-            }
+            tableBottomY + PAD,
+            { width: COL3_W + COL4_W - PAD * 2, align: "right" }
         );
 
-        // AMOUNT
-        doc.font("Helvetica").fontSize(8).text(
-            Number(item.totalAmount || 0).toFixed(2),
-            col4X + PAD,
-            itemY,
-            {
-                width: COL4_W - PAD * 2,
-                align: "right",
-            }
-        );
-    });
+        const finalBottomY = tableBottomY + totalH;
+        hLine(doc, finalBottomY);
 
-    // const totalItemsH = itemHeights.reduce((a, b) => a + b, 0);
-    // const tableContentH = marksH + descH + totalItemsH + PAD * 2;
-    // const tableContentH2 = Math.max(tableContentH, 200); // minimum height for lower section
+        // ─────────────────────────────────────────────
+        //  OUTER INNER RECT (drawn last so it overlays)
+        // ─────────────────────────────────────────────
+        // Left border of inner section
+        vLine(doc, IX, innerStartY, finalBottomY);
+        // Right border
+        vLine(doc, IX + IW, innerStartY, finalBottomY);
+        // Top of inner section
+        hLine(doc, innerStartY);
+        // Bottom
+        hLine(doc, finalBottomY);
 
-    // const tableBottomY = rowY + tableContentH2;
-
-    // Vertical dividers for table content
-    [col2X, col3X, col4X].forEach((x) => vLine(doc, x, rowY, tableBottomY));
-
-    hLine(doc, tableBottomY);
-
-    // Total row
-    const totalH = 20;
-    const grandTotal = items.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0);
-
-    doc.font("Helvetica-Bold").fontSize(9).text(
-        `TOTAL USD ${grandTotal.toFixed(2)}`,
-        col3X + PAD,
-        tableBottomY + PAD,
-        { width: COL3_W + COL4_W - PAD * 2, align: "right" }
-    );
-
-    const finalBottomY = tableBottomY + totalH;
-    hLine(doc, finalBottomY);
-
-    // ─────────────────────────────────────────────
-    //  OUTER INNER RECT (drawn last so it overlays)
-    // ─────────────────────────────────────────────
-    // Left border of inner section
-    vLine(doc, IX, innerStartY, finalBottomY);
-    // Right border
-    vLine(doc, IX + IW, innerStartY, finalBottomY);
-    // Top of inner section
-    hLine(doc, innerStartY);
-    // Bottom
-    hLine(doc, finalBottomY);
-
-    doc.end();
+        doc.end();
+    })
 }
+
+
+
+
+
+
+
+
+
+
+exports.getAllProforma = async (req, res) => {
+    try {
+        const proforma = await prisma.proformaInvoice.findMany({
+            include: {
+                customer: true,
+            }
+        });
+
+        if (!proforma) {
+            throw new Error("proformaInvoice not found");
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "proformaInvoice Fetch Succesfully",
+            data: proforma,
+        });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).json({
+            success: false,
+            message: `Failed to fetch proforma invoices ${error.message}`,
+            error: error.message,
+        });
+    }
+};
+
+exports.getproformaparty = async (req, res) => {
+    try {
+        const { proformaid } = req.params
+        if (!proformaid) { throw new Error("proformaid  is required"); }
+
+        const party = await prisma.proformaInvoice.findUnique({
+            where: {
+                id: Number(proformaid),
+            },
+            include: {
+                customer: true,
+                consignee: true,
+                notifyParty: true,
+                contactPerson: true,
+                contract: true,
+                termsOfPayment: true,
+                items: {
+                    include: {
+                        product: true
+                    },
+                },
+            }
+        })
+
+        if (!party) {
+            throw new Error("Contract party not found");
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Fetch proformaParty Succesfully",
+            data: party,
+        })
+    } catch (error) {
+        console.error("getproformaparty error:", error.message)
+        return res.status(500).json({
+            success: false,
+            message: `fail fetch proformaParty ${error.message}`,
+        })
+    }
+}
+
+exports.getContractParties = async (req, res) => {
+    try {
+        const contractId = Number(req.params.contractId);
+        if (!contractId) { throw new Error("Contract id is required"); }
+
+        let contract;
+        try {
+            contract = await prisma.contract.findUnique({
+                where: {
+                    id: contractId,
+                },
+                include: {
+                    customer: true,
+                    consignee: true,
+                    notifyParty: true,
+                    contactPerson: true,
+                    termsOfPayment: true,
+                    contractItems: {
+                        include: {
+                            product: true,
+                        },
+                    },
+                },
+            });
+        } catch (error) {
+            console.error("Prisma contract error:", error);
+            throw new Error("Failed to fetch contract details");
+        }
+
+        if (!contract) {
+            throw new Error("Contract not found");
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Contract party details fetched successfully",
+            data: contract,
+        });
+    } catch (error) {
+        console.error("Get Contract Parties Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "fetch fail contract Party",
+        });
+    }
+};
+
+exports.proformainvoicecreate = async (req, res) => {
+    try {
+        const {
+            customerId,
+            contractId,
+            proformaInvoiceNo,
+            proformainvoiceDate,
+            lcnumber,
+            currency,
+            paymentterm,
+            otherRef,
+            preCarriageBy,
+            operatingAirlines,
+            flightNo,
+            countryOfOrigin,
+            countryOfFinalDestination,
+            portOfLoading,
+            portOfFinalDestination,
+            consigneeId,
+            notifyPartyId,
+            contactPersonId,
+            termsOfPaymentId,
+            items = [],
+        } = req.body;
+
+        if (!customerId || !contractId || !proformaInvoiceNo || !proformainvoiceDate || !items?.length) {
+            throw new Error("customerId, contractId, proformaInvoiceNo , proformainvoiceDate and at least one item are required");
+        }
+
+        try {
+            const existingInvoice =
+                await prisma.proformaInvoice.findUnique({
+                    where: {
+                        proformaInvoiceNo,
+                    },
+                });
+
+            if (existingInvoice) {
+                const error = new Error(
+                    `Proforma invoice number '${proformaInvoiceNo}' already exists`
+                );
+                error.statusCode = 409;
+                throw error;
+            }
+        } catch (error) {
+            console.error("Error while checking duplicate proformaInvoice:", error);
+            throw error;
+        }
+
+        const payload = {
+            customerId,
+            contractId,
+            proformaInvoiceNo,
+            proformaInvoiceDate: new Date(proformainvoiceDate),
+            invoicepaymentterm: paymentterm,
+            currency: currency,
+            operatingAirlines,
+            lcNumber: lcnumber,
+            otherRefrence: otherRef,
+            countryOfOrigin,
+            countryOfDestination: countryOfFinalDestination,
+            preCarriageBy,
+            portOfLoading,
+            portOfFinalDestination,
+            consigneeId: consigneeId,
+            notifyPartyId: notifyPartyId,
+            contactPersonId: contactPersonId,
+            termsOfPaymentId,
+            createdBy: req.user?.userName,
+
+            items: {
+                create: items.map((item, index) => {
+                    if (!item.productId) {
+                        throw new Error(
+                            `Product is required at row ${index + 1}`
+                        );
+                    }
+                    return {
+                        productId: item.productId,
+                        quantity: Number(item.quantity),
+                        pricePerKg: Number(item.pricePerKg),
+                        totalAmount: Number(item.quantity * item.pricePerKg),
+                    };
+                }),
+            },
+        };
+
+        let proformaInvoice;
+
+        try {
+            proformaInvoice = await prisma.proformaInvoice.create({
+                data: payload,
+                include: {
+                    items: true,
+                },
+            });
+        } catch (error) {
+            console.error("Error while creating proforma invoice:", error);
+            throw new Error("Failed to create proforma invoice in database", error);
+        }
+
+
+
+        return res.status(201).json({
+            success: true,
+            message: "Proforma invoice created successfully",
+            data: proformaInvoice,
+        });
+
+    } catch (error) {
+        console.error("Proforma Invoice Error:", error);
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || "Proforma invoice error while creating",
+        });
+    }
+};
+
+exports.proformainvoicePdf = async (req, res) => {
+    try {
+        const id = Number(req.params.id);
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid proformaInvoice ID",
+            });
+        }
+
+        const proformaInvoice = await prisma.proformaInvoice.findUnique({
+            where: { id },
+            include: {
+                items: {
+                    include: {
+                        product: true,
+                    },
+                },
+            },
+        });
+
+        if (!proformaInvoice) {
+            throw new Error('proformainvoice data not found')
+        }
+
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+            "Content-Disposition",
+            `inline; filename="proforma-invoice-${proformaInvoice.proformaInvoiceNo}.pdf"`
+        );
+
+        await generateProformaInvoice(proformaInvoice, res);
+
+    } catch (error) {
+        console.error("Error generating proforma invoice PDF:", error.message, error,);
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: error.message || "Failed to generate proforma invoice PDF",
+            });
+        }
+        res.end();
+    }
+};
+
 

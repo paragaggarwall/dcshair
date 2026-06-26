@@ -1,30 +1,33 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
-import { FileText, Search, Plus, Loader2, Calendar, User, MapPin, Download, Eye, X } from 'lucide-react';
+import { FileText, Search, Plus, Loader2, Calendar, User, MapPin, Download, Eye, X, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import InputBox from '../components/InputBox';
+import { useContractDownloadMutation, useContractPreviewMutation, useGetAllContractMutation } from './contractApi/contractApiSlice';
+import toast from 'react-hot-toast';
 
 export default function Contracts() {
+  const navigate = useNavigate();
   const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [previewState, setPreviewState] = useState({ open: false, url: null, name: '', loading: false });
-  const navigate = useNavigate();
+  const [getAllContract, { isLoading: loading, }] = useGetAllContractMutation();
+  const [contractPreview] = useContractPreviewMutation();
+  const [contractDownload] = useContractDownloadMutation();
 
   const fetchContracts = async () => {
-    setLoading(true);
     try {
-      const res = await api.get('/contracts/list');
-      setContracts(res.data);
+      const res = await getAllContract().unwrap();
+      if (res?.success) {
+        setContracts(res.data);
+        toast.success(res.message)
+      }
     } catch (err) {
-      console.error('Error fetching contracts:', err);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching contracts:', err.message);
+      toast.error(err.data.message)
     }
   };
-
   useEffect(() => {
     fetchContracts();
   }, []);
@@ -37,23 +40,29 @@ export default function Contracts() {
 
   const handlePreview = async (e, contract) => {
     e.stopPropagation();
-    setPreviewState({ open: true, url: null, name: contract.name, loading: true });
+
+    if (!contract?.id) {
+      toast.error("Contract not found");
+      return;
+    }
+
+    setPreviewState({ open: true, url: null, name: contract?.name || "Contract Preview", loading: true, });
     try {
-      const response = await api.get(`/contracts/${contract.id}/preview`, { responseType: 'blob' });
-      const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      setPreviewState({ open: true, url: blobUrl, name: contract.name, loading: false });
+      const blob = await contractPreview(contract.id).unwrap();
+      const blobUrl = URL.createObjectURL(blob);
+      setPreviewState({ open: true, url: blobUrl, name: contract?.name || "Contract Preview", loading: false, });
     } catch (err) {
-      console.error('Preview failed:', err);
-      setPreviewState({ open: false, url: null, name: '', loading: false });
-      alert('Failed to load PDF preview');
+      console.error(err);
+      setPreviewState({ open: false, url: null, name: "", loading: false, });
+      toast.error(err?.data?.message || err?.message || "Failed to load PDF preview");
     }
   };
 
   const handleDownload = async (e, contract) => {
     e.stopPropagation();
     try {
-      const response = await api.get(`/contracts/${contract.id}/pdf`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const response = await contractDownload(contract.id).unwrap();
+      const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `contract-${contract.name}.pdf`);
@@ -63,7 +72,7 @@ export default function Contracts() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error('Download failed:', err);
-      alert('Failed to download PDF');
+      toast.error(err?.data?.message || err?.message || "Failed to download PDF");
     }
   };
 
@@ -73,8 +82,8 @@ export default function Contracts() {
   };
 
   const filteredContracts = contracts.filter(contract =>
-    contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contract.customer?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    contract?.name?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
+    contract?.customer?.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -98,14 +107,24 @@ export default function Contracts() {
             </div>
           </div>
 
-          {/* Right: CTA */}
-          <button
-            onClick={() => navigate('/contracts/generate')}
-            className="bg-[#003366] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-[#004080] transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Generate Contract
-          </button>
+          <div className='flex gap-2'>
+            <button
+              onClick={fetchContracts}
+              disabled={loading}
+              title="Refresh"
+              className="p-2.5 rounded-xl hover:bg-gray-100 text-gray-500 transition-all disabled:opacity-40 cursor-pointer"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            {/* Right: CTA */}
+            <button
+              onClick={() => navigate('/contracts/generate')}
+              className="bg-[#003366] text-white px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 hover:bg-[#004080] transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Generate Contract
+            </button>
+          </div>
         </div>
       </div>
 
@@ -126,7 +145,7 @@ export default function Contracts() {
             {filteredContracts.length} Total Contracts
           </span>
         </div>
-        
+
         <div className="flex-1 overflow-hidden flex flex-col min-h-0">
           <table className="w-full text-left border-collapse table-fixed">
             <colgroup>

@@ -1,601 +1,5 @@
 
 
-
-
-
-// import { useState, useEffect, useCallback } from "react";
-// import {
-//     ArrowLeft, FileText, Package, Truck,
-//     Loader2, AlertCircle, MapPin, Phone, Mail,
-//     Download, Info, UserCheck, Plus,
-// } from "lucide-react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import api from "../utils/api";
-// import { useNavigate } from "react-router-dom";
-// import CustomSelect from "../components/CustomSelect";
-
-
-// // ── Design tokens — single source of truth ────────────────────────────────────
-// const labelCls = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5";
-// const inputCls =
-//     "w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm " +
-//     "text-slate-800 placeholder-slate-400 focus:outline-none " +
-//     "focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all min-h-[45px]";
-
-// const roCls = "w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm min-h-[45px] flex items-center";
-
-// const hasVal = (v) =>
-//     v !== null && v !== undefined && String(v).trim() !== "";
-
-// const isEmptyValue = (v) =>
-//     v === null ||
-//     v === undefined ||
-//     (typeof v === "string" && v.trim() === "") ||
-//     (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0);
-
-
-// function FieldLabel({ children, required }) {
-//     return (
-//         <label className={labelCls}>
-//             {children}
-//             {required && <span className="text-red-400 ml-0.5">*</span>}
-//         </label>
-//     );
-// }
-
-// function ROField({ label, value, required }) {
-//     const empty = !hasVal(value);
-//     return (
-//         <div>
-//             {label && <FieldLabel required={required}>{label}</FieldLabel>}
-//             <div className={`${roCls} ${empty ? "text-slate-300 italic" : "text-slate-800"}`}>
-//                 {empty ? "—" : value}
-//             </div>
-//         </div>
-//     );
-// }
-
-// function EditField({ label, required, type = "text", value, onChange, placeholder }) {
-//     return (
-//         <div>
-//             {label && <FieldLabel required={required}>{label}</FieldLabel>}
-//             <input
-//                 type={type}
-//                 className={inputCls}
-//                 value={value}
-//                 onChange={(e) => onChange(e.target.value)}
-//                 placeholder={placeholder}
-//             />
-//         </div>
-//     );
-// }
-
-// function Section({ icon: Icon, title, subtitle, children }) {
-//     return (
-//         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-//             <div className="flex items-center gap-3 mb-5">
-//                 <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-//                     <Icon className="w-3.5 h-3.5 text-blue-600" />
-//                 </div>
-//                 <div>
-//                     <h2 className="text-sm font-bold text-slate-800">{title}</h2>
-//                     {subtitle && <p className="text-[11px] text-slate-400 mt-0.5">{subtitle}</p>}
-//                 </div>
-//             </div>
-//             {children}
-//         </div>
-//     );
-// }
-
-// function PartyCard({ label, data }) {
-//     return (
-//         <div>
-//             <FieldLabel>{label}</FieldLabel>
-//             {!data ? (
-//                 <div className={`${roCls} text-slate-300 italic`}>Not provided</div>
-//             ) : (
-//                 <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-xl space-y-1.5 min-h-[42px]">
-//                     <p className="text-sm font-semibold text-slate-800">{data.name}</p>
-//                     {[data.address, data.city, data.state, data.country, data.pinCode].filter(Boolean).length > 0 && (
-//                         <div className="flex items-start gap-2 text-xs text-slate-600">
-//                             <MapPin className="w-3 h-3 text-blue-400 mt-0.5 flex-shrink-0" />
-//                             <span>
-//                                 {[data.address, data.city, data.state, data.country, data.pinCode]
-//                                     .filter(Boolean).join(", ")}
-//                             </span>
-//                         </div>
-//                     )}
-//                     {data.phone && (
-//                         <div className="flex items-center gap-2 text-xs text-slate-600">
-//                             <Phone className="w-3 h-3 text-blue-400 flex-shrink-0" />
-//                             <span>{data.phone}{data.altPhone ? ` / ${data.altPhone}` : ""}</span>
-//                         </div>
-//                     )}
-//                     {data.email && (
-//                         <div className="flex items-center gap-2 text-xs text-slate-600">
-//                             <Mail className="w-3 h-3 text-blue-400 flex-shrink-0" />
-//                             <span>{data.email}</span>
-//                         </div>
-//                     )}
-//                 </div>
-//             )}
-//         </div>
-//     );
-// }
-
-// function Grid3({ children }) {
-//     return (
-//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-//             {children}
-//         </div>
-//     );
-// }
-
-
-// export default function ProformaInvoiceGenerate() {
-
-//     const navigate = useNavigate();
-
-//     // contract list
-//     const [contracts, setContracts] = useState([]);
-//     const [loadingContracts, setLoadingContracts] = useState(true);
-
-//     // selected contract
-//     const [contractId, setContractId] = useState("");
-
-//     // contract detail data
-//     const [d, setD] = useState(null);
-//     const [loadingData, setLoadingData] = useState(false);
-
-//     // user-entered fields
-//     const [invoiceNo, setInvoiceNo] = useState("");
-//     const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
-//     const [lcnumber, setLcnumber] = useState("");
-//     const [lcDate, setLcDate] = useState("");
-//     const [airlineNo, setAirlineNo] = useState("");
-//     const [otherRef, setOtherRef] = useState("");
-
-//     // ui state
-//     const [apiError, setApiError] = useState("");
-//     const [generatingPdf, setGeneratingPdf] = useState(false);
-
-
-//     // ── Validation — ALL fields mandatory ─────────────────────────────────────
-//     const validateForm = useCallback(() => {
-//         if (!d) {
-//             setApiError("Please select a contract first.");
-//             return false;
-//         }
-
-//         const required = [
-//             { key: "Contract", value: contractId },
-//             { key: "Proforma Invoice Number", value: invoiceNo },
-//             { key: "Invoice Date", value: invoiceDate },
-//             { key: "LC Number", value: lcnumber },
-//             { key: "LC Date", value: lcDate },
-//             { key: "Airlines / Vessel No.", value: airlineNo },
-//             { key: "Other Reference(s)", value: otherRef },
-//             { key: "Consignee", value: d.consignee },
-//             { key: "Terms of Payment", value: d.termsOfPayment },
-//             { key: "Country of Origin", value: d.countryOfOrigin },
-//             { key: "Country of Destination", value: d.countryOfDestination },
-//             { key: "Pre-Carriage By", value: d.preCarriageBy },
-//             { key: "Port of Loading", value: d.portOfLoading },
-//             { key: "Port of Final Destination", value: d.portOfFinalDestination },
-//             // { key: "Description of Goods", value: d.description },
-//         ];
-
-//         for (const field of required) {
-//             if (isEmptyValue(field.value)) {
-//                 setApiError(`${field.key} is required.`);
-//                 return false;
-//             }
-//         }
-
-//         setApiError("");
-//         return true;
-//     }, [d, contractId, invoiceNo, invoiceDate, lcnumber, lcDate, airlineNo, otherRef]);
-
-//     useEffect(() => {
-//         setInvoiceNo("");
-//         setLcnumber("");
-//         setOtherRef("");
-//         setAirlineNo("");
-//     }, [contractId]);
-//     // ── Data fetching ──────────────────────────────────────────────────────────
-//     useEffect(() => {
-//         api.get("/proformainvoice/allcontract")
-//             .then((res) => setContracts(res.data))
-//             .catch((e) => setApiError(e?.response?.data?.error ?? e.message))
-//             .finally(() => setLoadingContracts(false));
-//     }, []);
-
-//     useEffect(() => {
-//         if (!contractId) { setD(null); return; }
-//         setLoadingData(true);
-//         setApiError("");
-//         api.get(`/proformainvoice/${contractId}/parties`)
-//             .then((res) => setD(res.data))
-//             .catch((e) => setApiError(e?.response?.data?.error ?? e.message))
-//             .finally(() => setLoadingData(false));
-//     }, [contractId]);
-
-
-//     // ── Derived totals ─────────────────────────────────────────────────────────
-//     const contractItems = d?.contractItems ?? [];
-
-//     const totalKgs = contractItems.reduce(
-//         (s, i) => s + (parseFloat(i.quantity) || 0), 0
-//     );
-
-//     const totalAmount = contractItems.reduce((s, i) => {
-//         const qty = parseFloat(i.quantity) || 0;
-//         const rate = parseFloat(i.pricePerKg ?? i.product?.pricePerKg) || 0;
-//         return s + qty * rate;
-//     }, 0);
-
-
-//     // ── Payload ────────────────────────────────────────────────────────────────
-//     const buildPayload = useCallback(() => ({
-//         contractId,
-//         invoiceNo,
-//         invoiceDate,
-//         lcnumber,
-//         lcDate,
-//         airline_no: airlineNo,
-//         otherRef,
-//         customerId: d.customerId ?? "",
-//         consigneeId: d.consigneeId ?? "",
-//         buyerId: d.buyerId ?? "",
-//         buyerDate: d.buyer?.createdAt
-//             ? new Date(d.buyer.createdAt).toLocaleDateString("en-GB")
-//             : "",
-//         notifyPartyId: d.notifyPartyId ?? "",
-//         contactPersonId: d.contactPersonId ?? "",
-//         termsOfPaymentId: d.termsOfPaymentId ?? "",
-//         countryOfOrigin: d.countryOfOrigin ?? "",
-//         countryOfFinalDestination: d.countryOfDestination ?? "",
-//         preCarriageBy: d.preCarriageBy ?? "",
-//         portOfLoading: d.portOfLoading ?? "",
-//         portOfFinalDestination: d.portOfFinalDestination ?? "",
-//         description: d.description ?? "",
-//         packing: totalKgs > 0 ? totalKgs / 25 : 0,
-//         operatingAirlines: airlineNo ?? "",
-//         consignee: d.consignee ?? null,
-//         buyer: d.buyer ?? null,
-//         notifyParty: d.notifyParty ?? null,
-//         contactPerson: d.contactPerson ?? null,
-//         termsOfPayment: d.termsOfPayment ?? null,
-//         items: contractItems.map((item) => ({
-//             productId: item.productId,
-//             name: item.product?.name ?? "",
-//             size: item.product?.size ?? "",
-//             skuCode: item.product?.skuCode ?? "",
-//             quantity: parseFloat(item.quantity) || 0,
-//             pricePerKg: parseFloat(item.pricePerKg ?? item.product?.pricePerKg) || 0,
-//             totalAmount: item.totalAmount ?? 0,
-//         })),
-//     }), [d, contractId, invoiceNo, invoiceDate, lcnumber, lcDate, airlineNo, otherRef, contractItems, totalKgs]);
-
-
-//     // ── PDF generation ─────────────────────────────────────────────────────────
-//     const handleGeneratePdf = async () => {
-//         if (!validateForm()) return;
-
-//         setGeneratingPdf(true);
-//         setApiError("");
-
-//         try {
-//             const res = await api.post(
-//                 "/proformainvoice/pdfgenerate",
-//                 buildPayload(),
-//                 { responseType: "blob" }
-//             );
-
-//             const blobUrl = URL.createObjectURL(
-//                 new Blob([res.data], { type: "application/pdf" })
-//             );
-//             const link = document.createElement("a");
-//             link.href = blobUrl;
-//             link.download = `proforma-invoice-${invoiceNo || "draft"}.pdf`;
-//             document.body.appendChild(link);
-//             link.click();
-//             document.body.removeChild(link);
-
-//             // Revoke URL then reload to reset form
-//             setTimeout(() => {
-//                 URL.revokeObjectURL(blobUrl);
-//                 window.location.reload();
-//             }, 500);
-
-//         } catch (e) {
-//             const message =
-//                 e?.response?.data instanceof Blob
-//                     ? await e.response.data.text().then((t) => {
-//                         try { return JSON.parse(t)?.error; } catch { return t; }
-//                     })
-//                     : e?.response?.data?.error ?? e.message;
-//             setApiError(message || "Failed to generate PDF. Please try again.");
-//             setGeneratingPdf(false);
-//         }
-//     };
-
-//     const canSubmit = !!d && !loadingData;
-
-
-//     // ── Render ─────────────────────────────────────────────────────────────────
-//     return (
-//         <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
-
-
-//             {/* HEADER (fixed area) */}
-//             <div className="flex items-center gap-4 bg-white z-10 sticky top-0 border-b border-slate-100 px-4 py-4">
-//                 <button
-//                     onClick={() => navigate("/proformainvoice")}
-//                     className="p-2 bg-white hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-700 transition-all shadow-sm border border-slate-100"
-//                 >
-//                     <ArrowLeft className="w-4 h-4" />
-//                 </button>
-
-//                 <div className="flex-1">
-//                     <h1 className="text-xl font-black text-slate-900 tracking-tight">
-//                         Generate Proforma Invoice
-//                     </h1>
-//                     <p className="text-xs text-slate-400 mt-0.5">
-//                         Select a contract — all details fill automatically
-//                     </p>
-//                 </div>
-
-//                 <div className="flex gap-3 ml-auto">
-//                     <button
-//                         type="button"
-//                         onClick={() => navigate("/proformainvoice")}
-//                         className="px-8 py-3 rounded-xl font-bold text-sm text-gray-500 hover:bg-white transition-colors border border-transparent hover:border-gray-100"
-//                     >
-//                         Cancel
-//                     </button>
-
-//                     <button
-//                         type="button"
-//                         onClick={handleGeneratePdf}
-//                         disabled={generatingPdf || !canSubmit}
-//                         className="flex items-center gap-2 bg-[#003366] hover:bg-[#004080]  disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all shadow-sm"
-//                     >
-//                         {generatingPdf
-//                             ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating…</>
-//                             : <><Download className="w-3.5 h-3.5" /> Generate PDF</>
-//                         }
-//                     </button>
-//                 </div>
-//             </div>
-//             {/* ════ SCROLLABLE CONTENT ════ */}
-//             <main className="flex-1 overflow-y-auto">
-//                 <div className=" mx-auto px-4 py-6 space-y-5">
-
-//                     {/* Error Banner */}
-//                     <AnimatePresence>
-//                         {apiError && (
-//                             <motion.div
-//                                 initial={{ opacity: 0, y: -8 }}
-//                                 animate={{ opacity: 1, y: 0 }}
-//                                 exit={{ opacity: 0 }}
-//                                 className="flex items-center gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600"
-//                             >
-//                                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
-//                                 <span className="font-medium flex-1">{apiError}</span>
-//                                 <button
-//                                     onClick={() => setApiError("")}
-//                                     className="text-red-400 hover:text-red-600 ml-auto flex-shrink-0"
-//                                 >
-//                                     <Plus className="w-3.5 h-3.5 rotate-45" />
-//                                 </button>
-//                             </motion.div>
-//                         )}
-//                     </AnimatePresence>
-
-//                     {/* ── S1: Basic Information ── */}
-//                     <Section icon={Info} title="Basic Information" subtitle="Select a contract — everything else fills automatically">
-//                         <Grid3>
-//                             {/* CustomSelect needs label rendered separately to match FieldLabel style */}
-//                             <div>
-//                                 <FieldLabel required>Select Contract</FieldLabel>
-//                                 <CustomSelect
-//                                     placeholder="Choose contract"
-//                                     options={contracts.map((c) => ({
-//                                         id: c.id,
-//                                         name: c.name || c.contractNo || `Contract ${c.id}`,
-//                                     }))}
-//                                     value={contractId}
-//                                     onChange={setContractId}
-//                                     searchable
-//                                 />
-//                             </div>
-
-//                             <EditField
-//                                 label="Proforma Invoice Number"
-//                                 required
-//                                 value={invoiceNo}
-//                                 onChange={setInvoiceNo}
-//                                 placeholder="12/05/DCS/2026"
-//                             />
-
-//                             <EditField
-//                                 label="Invoice Date"
-//                                 required
-//                                 type="date"
-//                                 value={invoiceDate}
-//                                 onChange={setInvoiceDate}
-//                             />
-//                         </Grid3>
-
-//                         {loadingData && (
-//                             <div className="flex items-center gap-2 text-sm text-slate-400 mt-4">
-//                                 <Loader2 className="w-4 h-4 animate-spin" />
-//                                 Loading contract data…
-//                             </div>
-//                         )}
-//                     </Section>
-
-//                     {/* ── Sections animate in once data arrives ── */}
-//                     <AnimatePresence>
-//                         {d && !loadingData && (
-//                             <motion.div
-//                                 initial={{ opacity: 0, y: 12 }}
-//                                 animate={{ opacity: 1, y: 0 }}
-//                                 exit={{ opacity: 0 }}
-//                                 className="space-y-5"
-//                             >
-
-//                                 {/* ── S2: Parties ── */}
-//                                 <Section icon={UserCheck} title="Parties" subtitle="Consignee, Buyer, Notify Party & Contact Person">
-//                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                                         <PartyCard label="Consignee" data={d.consignee} />
-//                                         <PartyCard label="Buyer" data={d.buyer} />
-//                                         <PartyCard label="Notify Party" data={d.notifyParty} />
-//                                         <PartyCard label="Contact Person" data={d.contactPerson} />
-//                                     </div>
-//                                 </Section>
-
-//                                 {/* ── S3: Invoice Information ── */}
-//                                 <Section icon={FileText} title="Invoice Information" subtitle="Reference numbers & dates from contract">
-//                                     <Grid3>
-//                                         <ROField label="Terms of Payment" required value={d.termsOfPayment?.name} />
-//                                         <ROField label="Buyer's Order No." required value={d.buyerId} />
-//                                         <ROField
-//                                             label="Buyer Order Date"
-//                                             required
-//                                             value={d.buyer?.createdAt
-//                                                 ? new Date(d.buyer.createdAt).toLocaleDateString("en-GB")
-//                                                 : ""}
-//                                         />
-//                                         <EditField
-//                                             label="LC Number"
-//                                             required
-//                                             value={lcnumber}
-//                                             onChange={setLcnumber}
-//                                             placeholder="Enter LC / No."
-//                                         />
-//                                         <EditField
-//                                             label="LC Date"
-//                                             required
-//                                             type="date"
-//                                             value={lcDate}
-//                                             onChange={setLcDate}
-//                                         />
-//                                         <EditField
-//                                             label="Other Reference(s)"
-//                                             required
-//                                             value={otherRef}
-//                                             onChange={setOtherRef}
-//                                             placeholder="Enter reference"
-//                                         />
-//                                     </Grid3>
-//                                 </Section>
-
-//                                 {/* ── S4: Shipping & Delivery ── */}
-//                                 <Section icon={Truck} title="Shipping & Delivery" subtitle="Transport and delivery details from contract">
-//                                     <Grid3>
-//                                         <ROField label="Country of Origin" required value={d.countryOfOrigin} />
-//                                         <ROField label="Country of Destination" required value={d.countryOfDestination} />
-//                                         <ROField label="Pre-Carriage By" required value={d.preCarriageBy} />
-//                                         <ROField label="Port of Loading" required value={d.portOfLoading} />
-//                                         <ROField label="Port of Final Destination" required value={d.portOfFinalDestination} />
-//                                         <ROField
-//                                             label="Packing Details"
-//                                             required
-//                                             value={totalKgs > 0 ? `${totalKgs / 25} CARTONS` : ""}
-//                                         />
-//                                         <ROField label="Description of Goods" value={d.description} />
-//                                         <EditField
-//                                             label="Airlines / Vessel No."
-//                                             required
-//                                             value={airlineNo}
-//                                             onChange={setAirlineNo}
-//                                             placeholder="Enter Airline / Vessel No."
-//                                         />
-//                                     </Grid3>
-//                                 </Section>
-
-//                                 {/* ── S5: Products ── */}
-//                                 <Section icon={Package} title="Product Details" subtitle="Products from contract">
-
-//                                     {/* Column headers */}
-//                                     <div className="hidden sm:grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 mb-2 px-1">
-//                                         {["Product", "Size", "Qty (KGS)", "Rate (US$/KGS)", "Amount (US$)"].map((h, i) => (
-//                                             <p key={i} className={labelCls}>{h}</p>
-//                                         ))}
-//                                     </div>
-
-//                                     {contractItems.length === 0 ? (
-//                                         <p className="text-sm text-slate-300 italic py-4 text-center">
-//                                             No products on this contract
-//                                         </p>
-//                                     ) : (
-//                                         <div className="space-y-3">
-//                                             {contractItems.map((item, i) => {
-//                                                 const prod = item.product;
-//                                                 const qty = parseFloat(item.quantity) || 0;
-//                                                 const rate = parseFloat(item.pricePerKg ?? prod?.pricePerKg) || 0;
-//                                                 const total = qty * rate;
-//                                                 return (
-//                                                     <motion.div
-//                                                         key={item.id ?? i}
-//                                                         initial={{ opacity: 0, x: -10 }}
-//                                                         animate={{ opacity: 1, x: 0 }}
-//                                                         className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-2 items-start"
-//                                                     >
-//                                                         <div className={`${roCls} flex-col !items-start text-slate-800`}>
-//                                                             <p className="font-medium leading-snug">{prod?.name ?? "—"}</p>
-
-//                                                         </div>
-//                                                         <div className={`${roCls} justify-end text-slate-800`}>
-//                                                             {prod?.size ?? "—"}
-//                                                         </div>
-//                                                         <div className={`${roCls} justify-end ${qty === 0 ? "text-slate-300 italic" : "text-slate-800"}`}>
-//                                                             {qty === 0 ? "—" : qty.toLocaleString()}
-//                                                         </div>
-//                                                         <div className={`${roCls} justify-end ${rate === 0 ? "text-slate-300 italic" : "text-slate-800"}`}>
-//                                                             {rate === 0 ? "—" : rate.toFixed(2)}
-//                                                         </div>
-//                                                         <div className={`${roCls} justify-end font-bold ${total === 0 ? "text-slate-300 italic" : "text-slate-700"}`}>
-//                                                             {total === 0 ? "—" : total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-//                                                         </div>
-//                                                     </motion.div>
-//                                                 );
-//                                             })}
-//                                         </div>
-//                                     )}
-
-//                                     {/* Totals footer */}
-//                                     <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-//                                         <div className="flex gap-5 text-sm">
-//                                             <span className="text-slate-500">
-//                                                 Total KGS: <span className="font-black text-slate-800">{totalKgs.toLocaleString()}</span>
-//                                             </span>
-//                                             <span className="text-slate-500">
-//                                                 Rows: <span className="font-black text-slate-800">{contractItems.length}</span>
-//                                             </span>
-//                                         </div>
-//                                         <div className="text-right">
-//                                             <p className={labelCls}>Invoice Value</p>
-//                                             <p className="text-2xl font-black text-[#003366]">
-//                                                 US$ {totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-//                                             </p>
-//                                         </div>
-//                                     </div>
-//                                 </Section>
-
-//                             </motion.div>
-//                         )}
-//                     </AnimatePresence>
-
-//                 </div>
-//             </main>
-//         </div>
-//     );
-// }
-
-
 import { useState, useEffect, useCallback } from "react";
 import {
     ArrowLeft, FileText, Package, Truck,
@@ -617,8 +21,9 @@ import { useNavigate } from "react-router-dom";
 import InputBox from "../components/inputBox";
 import CustomSelect from "../components/CustomSelect";
 import { useGetallcontractQuery, useGetproformainvoicepartiesMutation, useProformainvoicecreateMutation } from "./profomainvoice/ProformaApiSlice";
-import { useLazyGetalltermofpaymentQuery } from "./invoiceapi/Invoiceapislice";
 import { useAddCustomerPartyMutation, useGetCustomerbyIdMutation } from "../customerapiSlice/apiSlicecustomer";
+import toast from "react-hot-toast";
+import { useLazyGetalltermofpaymentQuery } from "./payment_productApi/payment_productApiSlice";
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
 const labelCls = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5";
@@ -650,7 +55,8 @@ const INITIAL_FORM = {
     portOfLoading: "",
     portOfFinalDestination: "",
     description: "",
-    airlineNo: "",
+    operatingAirlines: "",
+    flightNo: "",
     currency: "",
     consigneeid: null,
     notifyPartyid: null,
@@ -712,7 +118,7 @@ function Section({ icon: Icon, title, subtitle, children }) {
 }
 
 function Grid3({ children }) {
-    return <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">{children}</div>;
+    return <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">{children}</div>;
 }
 
 function PartyBlock({ label, options, value, onChange, selectedData, onAdd, loading }) {
@@ -931,7 +337,8 @@ export default function ProformaInvoiceGenerate() {
             portOfLoading: data.portOfLoading ?? "",
             portOfFinalDestination: data.portOfFinalDestination ?? "",
             description: data.description ?? "",
-            airlineNo: data.operatingAirlines ?? "",
+            operatingAirlines: data.operatingAirlines ?? "",
+            flightNo: data.flightNo ?? "",
             currency: data.currency ?? "",
             consigneeid: data.consignee?.id ?? null,
             notifyPartyid: data.notifyParty?.id ?? null,
@@ -978,9 +385,14 @@ export default function ProformaInvoiceGenerate() {
         if (!d?.customerId) return;
         const fetchCustomer = async () => {
             try {
-                const res = await getCustomerbyId(d.customerId);
-                setcustomerparty(res.data);
-            } catch (e) { console.error(e); }
+                const res = await getCustomerbyId(d.customerId).unwrap();
+                if (res?.success) {
+                    setcustomerparty(res.data);
+                }
+            } catch (e) {
+                console.error(e.data.message || e);
+                toast.error(e || e.data.message || 'fail to fetch customerparty')
+            }
         };
         fetchCustomer();
     }, [d?.customerId]);
@@ -999,7 +411,7 @@ export default function ProformaInvoiceGenerate() {
         const {
             proformaInvoiceNo, invoiceDate, termsOfPayment, paymentterm,
             lcnumber, lcDate, otherRef, countryOfOrigin, countryOfDestination,
-            preCarriageBy, portOfLoading, portOfFinalDestination, airlineNo, currency, consigneeid,
+            preCarriageBy, portOfLoading, portOfFinalDestination, operatingAirlines, flightNo, currency, consigneeid,
         } = form;
 
         if (!d) { setApiError("Please select a contract first."); return false; }
@@ -1017,7 +429,8 @@ export default function ProformaInvoiceGenerate() {
             { key: "Pre-Carriage By", value: preCarriageBy },
             { key: "Port of Loading", value: portOfLoading },
             { key: "Port of Final Destination", value: portOfFinalDestination },
-            { key: "Airlines / Vessel No.", value: airlineNo },
+            { key: "Operating Airlines", value: operatingAirlines },
+            { Key: "Flight No", value: flightNo },
             { key: "Currency", value: currency },
             { key: "Consignee", value: consigneeid },
         ];
@@ -1040,13 +453,13 @@ export default function ProformaInvoiceGenerate() {
             lcnumber, lcDate, otherRef,
             countryOfOrigin, countryOfDestination, preCarriageBy,
             portOfLoading, portOfFinalDestination, description,
-            airlineNo, currency, consigneeid, notifyPartyid, contactPersonid,
+            operatingAirlines, flightNo, currency, consigneeid, notifyPartyid, contactPersonid,
         } = form;
 
         return {
             contractId,
             proformaInvoiceNo,
-            invoiceDate,
+            proformainvoiceDate: invoiceDate,
             lcnumber,
             lcDate,
             otherRef,
@@ -1064,22 +477,23 @@ export default function ProformaInvoiceGenerate() {
             description,
             totalKgs,
             packing: String(totalKgs > 0 ? totalKgs / 25 : 0),
-            operatingAirlines: airlineNo,
+            operatingAirlines: operatingAirlines,
+            flightNo: flightNo,
             currency,
             totalAmount,
-            customer: d?.customer ?? null,
-            consignee: customerparty?.consignees?.find((c) => c.id === consigneeid) ?? null,
-            notifyParty: customerparty?.notifyParties?.find((n) => n.id === notifyPartyid) ?? null,
-            contactPerson: customerparty?.contactPersons?.find((c) => c.id === contactPersonid) ?? null,
-            termsOfPayment: termpay?.find((c) => c.id === termsOfPayment) ?? null,
+            // customer: d?.customer ?? null,
+            // consignee: customerparty?.consignees?.find((c) => c.id === consigneeid) ?? null,
+            // notifyParty: customerparty?.notifyParties?.find((n) => n.id === notifyPartyid) ?? null,
+            // contactPerson: customerparty?.contactPersons?.find((c) => c.id === contactPersonid) ?? null,
+            // termsOfPayment: termpay?.find((c) => c.id === termsOfPayment) ?? null,
             items: contractItems.map((item) => ({
                 productId: item.productId,
                 name: item.product?.name ?? "",
-                size: item.product?.size ?? "",
+                // size: item.product?.size ?? "",
                 skuCode: item.product?.skuCode ?? "",
                 quantity: parseFloat(item.quantity) || 0,
                 pricePerKg: parseFloat(item.pricePerKg ?? item.product?.pricePerKg) || 0,
-                totalAmount: item.totalAmount ?? 0,
+                // totalAmount: item.totalAmount ?? 0,
             })),
         };
     }, [d, form, contractId, contractItems, totalKgs, totalAmount, termpay, customerparty]);
@@ -1100,9 +514,14 @@ export default function ProformaInvoiceGenerate() {
     const handlePartyAdded = async () => {
         if (!d?.customerId) return;
         try {
-            const res = await getCustomerbyId(d.customerId);
-            setcustomerparty(res.data);
-        } catch (e) { console.error(e); }
+            const res = await getCustomerbyId(d.customerId).unwrap();
+            if (res?.success) {
+                setcustomerparty(res.data);
+            }
+        } catch (e) {
+            console.error(e.data.message || e);
+            toast.error(e.data.message || e.message || 'fail to load customerparty')
+        }
     };
 
     const loadingData = loadingContractData || loadingCustomer;
@@ -1199,7 +618,8 @@ export default function ProformaInvoiceGenerate() {
                         title="Basic Information"
                         subtitle="Select a contract — everything else fills automatically"
                     >
-                        <Grid3>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             <CustomSelect
                                 label="Select Contract"
                                 placeholder={loadingContracts ? "Loading…" : "Choose contract"}
@@ -1229,7 +649,7 @@ export default function ProformaInvoiceGenerate() {
                                 handleChangeFunction={setField("invoiceDate")}
                                 isInputBoxDisabled={!contractId}
                             />
-                        </Grid3>
+                        </div>
 
                         {loadingData && (
                             <div className="flex items-center gap-2 text-sm text-slate-400 mt-4">
@@ -1259,8 +679,8 @@ export default function ProformaInvoiceGenerate() {
                                     {/* Buyer — read-only */}
                                     <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col gap-3 mb-4">
                                         <span className={labelCls + " mb-0"}>Buyer</span>
-                                        {(d.customer ?? d.buyer) ? (
-                                            <PartyCard data={d.customer ?? d.buyer} />
+                                        {(d.customer) ? (
+                                            <PartyCard data={d.customer} />
                                         ) : (
                                             <div className="flex items-center justify-center h-14 rounded-xl border border-dashed border-slate-200 text-xs text-slate-300 italic">
                                                 No buyer data
@@ -1306,7 +726,13 @@ export default function ProformaInvoiceGenerate() {
                                     title="Invoice Information"
                                     subtitle="Pre-filled from contract — edit as needed"
                                 >
-                                    <Grid3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        <InputBox
+                                            title="Buyer's Order No."
+                                            inputFor="buyersOrderNo"
+                                            value={d?.customerId ?? ""}
+                                            isInputBoxDisabled
+                                        />
                                         <CustomSelect
                                             label="Terms of Payment"
                                             placeholder={loadingTerms ? "Loading…" : "Choose Terms of Payment"}
@@ -1326,11 +752,15 @@ export default function ProformaInvoiceGenerate() {
                                             value={form.paymentterm}
                                             onChange={setField("paymentterm")}
                                         />
-                                        <InputBox
-                                            title="Buyer's Order No."
-                                            inputFor="buyersOrderNo"
-                                            value={d?.customerId ?? ""}
-                                            isInputBoxDisabled
+                                        <CustomSelect
+                                            label="Currency"
+                                            options={[
+                                                { id: "USD", name: "USD" },
+                                                { id: "INR", name: "INR" },
+                                                { id: "EUR", name: "EUR" },
+                                            ]}
+                                            value={form.currency}
+                                            onChange={setField("currency")}
                                         />
                                         <InputBox
                                             title="LC Number"
@@ -1348,15 +778,8 @@ export default function ProformaInvoiceGenerate() {
                                             value={form.lcDate}
                                             handleChangeFunction={setField("lcDate")}
                                         />
-                                        <InputBox
-                                            title="Other Reference(s)"
-                                            isMandatory
-                                            inputFor="otherRef"
-                                            value={form.otherRef}
-                                            handleChangeFunction={setField("otherRef")}
-                                            placeholder="Enter reference"
-                                        />
-                                    </Grid3>
+
+                                    </div>
                                 </Section>
 
 
@@ -1366,7 +789,7 @@ export default function ProformaInvoiceGenerate() {
                                     title="Shipping & Delivery"
                                     subtitle="Pre-filled from contract — edit as needed"
                                 >
-                                    <Grid3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                         <InputBox
                                             title="Country of Origin"
                                             isMandatory
@@ -1383,16 +806,7 @@ export default function ProformaInvoiceGenerate() {
                                             handleChangeFunction={setField("countryOfDestination")}
                                             placeholder="e.g. China"
                                         />
-                                        <CustomSelect
-                                            label="Pre-Carriage By"
-                                            options={[
-                                                { id: "Sea", name: "Sea" },
-                                                { id: "Air", name: "Air" },
-                                                { id: "Road", name: "Road" },
-                                            ]}
-                                            value={form.preCarriageBy}
-                                            onChange={setField("preCarriageBy")}
-                                        />
+
                                         <InputBox
                                             title="Port of Loading"
                                             isMandatory
@@ -1409,12 +823,32 @@ export default function ProformaInvoiceGenerate() {
                                             handleChangeFunction={setField("portOfFinalDestination")}
                                             placeholder="e.g. Zhengzhou, China"
                                         />
+
+                                        <CustomSelect
+                                            label="Pre-Carriage By"
+                                            options={[
+                                                { id: "Sea", name: "Sea" },
+                                                { id: "Air", name: "Air" },
+                                                { id: "Road", name: "Road" },
+                                            ]}
+                                            value={form.preCarriageBy}
+                                            onChange={setField("preCarriageBy")}
+                                        />
                                         <InputBox
-                                            title="Final Destination"
-                                            inputFor="finalDestination"
-                                            value={form.portOfFinalDestination}
-                                            handleChangeFunction={setField("portOfFinalDestination")}
-                                            placeholder="e.g. Zhengzhou, China"
+                                            title="Operating Airlines"
+                                            isMandatory
+                                            inputFor="operatingAirlines"
+                                            value={form.operatingAirlines}
+                                            handleChangeFunction={setField("operatingAirlines")}
+                                            placeholder="-"
+                                        />
+                                        <InputBox
+                                            title="Flight No"
+                                            isMandatory
+                                            inputFor="flightNo"
+                                            value={form.flightNo}
+                                            handleChangeFunction={setField("flightNo")}
+                                            placeholder="-"
                                         />
                                         <InputBox
                                             title="Description of Goods"
@@ -1424,22 +858,12 @@ export default function ProformaInvoiceGenerate() {
                                             placeholder="Enter description"
                                         />
                                         <InputBox
-                                            title="Airlines / Vessel No."
+                                            title="Other Reference(s)"
                                             isMandatory
-                                            inputFor="airlineNo"
-                                            value={form.airlineNo}
-                                            handleChangeFunction={setField("airlineNo")}
-                                            placeholder="e.g. KE / Flight No."
-                                        />
-                                        <CustomSelect
-                                            label="Currency"
-                                            options={[
-                                                { id: "USD", name: "USD" },
-                                                { id: "INR", name: "INR" },
-                                                { id: "EUR", name: "EUR" },
-                                            ]}
-                                            value={form.currency}
-                                            onChange={setField("currency")}
+                                            inputFor="otherRef"
+                                            value={form.otherRef}
+                                            handleChangeFunction={setField("otherRef")}
+                                            placeholder="Enter reference"
                                         />
                                         <InputBox
                                             title="Carton Weight"
@@ -1461,7 +885,7 @@ export default function ProformaInvoiceGenerate() {
                                             value="DCS"
                                             isInputBoxDisabled
                                         />
-                                    </Grid3>
+                                    </div>
                                 </Section>
 
 

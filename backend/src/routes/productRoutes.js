@@ -5,5 +5,7 @@ const router = express.Router();
 
 router.post('/create', authenticateToken, productController.createProduct);
 router.post('/get', authenticateToken, productController.getProducts);
+router.get('/:id',authenticateToken,productController.getProductById)
+router.post('/update/:id',authenticateToken,productController.updateProductbyId)
 
 module.exports = router;

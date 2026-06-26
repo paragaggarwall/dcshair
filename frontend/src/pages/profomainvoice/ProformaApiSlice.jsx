@@ -4,7 +4,7 @@ export const ProformaApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getallcontract: builder.query({
             query: () => ({
-                url: `/proformainvoice/allcontract`,
+                url: `/contracts/list`,
                 method: 'GET'
             })
         }),
@@ -17,7 +17,7 @@ export const ProformaApiSlice = apiSlice.injectEndpoints({
 
         proformainvoicecreate: builder.mutation({
             query: ({ body }) => ({
-                url: `/proformainvoice/pdfgenerate`,
+                url: `/proformainvoice/create`,
                 method: 'POST',
                 body,
             })
@@ -25,8 +25,31 @@ export const ProformaApiSlice = apiSlice.injectEndpoints({
 
         getMyProformaInvoices: builder.query({
             query: () => ({
-                url: '/proformainvoice/getMyProformaInvoices',
-                method:'GET',
+                url: '/proformainvoice',
+                method: 'GET',
+            })
+        }),
+
+        proformaDownload: builder.mutation({
+            query: (id) => ({
+                url: `/proformainvoice/${id}/pdf`,
+                method: 'GET',
+                responseHandler: (response) => response.blob(),
+            })
+        }),
+
+        proformaPreview: builder.mutation({
+            query: (id) => ({
+                url: `/proformainvoice/${id}/preview`,
+                method: 'GET',
+                // responseHandler: (response) => response.blob(),
+                responseHandler: async (response) => {
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw error;
+                    }
+                    return response.blob();
+                },
             })
         }),
 
@@ -37,4 +60,6 @@ export const {
     useGetproformainvoicepartiesMutation,
     useProformainvoicecreateMutation,
     useGetMyProformaInvoicesQuery,
+    useProformaDownloadMutation,
+    useProformaPreviewMutation,
 } = ProformaApiSlice

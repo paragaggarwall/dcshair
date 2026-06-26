@@ -20,130 +20,154 @@ model User {
 }
 
 model Customer {
-  id             Int             @id @default(autoincrement())
-  name           String
-  email          String?         @unique
-  address        String?
-  phone          String?
-  altPhone       String?
-  city           String?
-  state          String?
-  country        String?
-  pinCode        String?
-  createdAt      DateTime        @default(now())
-  createdBy      String?
-  contracts      Contract[]
-  consignees     Consignee[]
-  buyers         Buyer[]
-  notifyParties  NotifyParty[]
-  contactPersons ContactPerson[]
+  id               Int               @id @default(autoincrement())
+  name             String
+  email            String?           @unique
+  address          String?
+  phone            String?
+  altPhone         String?
+  city             String?
+  state            String?
+  country          String?
+  pinCode          String?
+  usciNo           String?
+  createdAt        DateTime          @default(now())
+  createdBy        String?
+  contracts        Contract[]
+  consignees       Consignee[]
+  notifyParties    NotifyParty[]
+  contactPersons   ContactPerson[]
+  proformaInvoices ProformaInvoice[]
+  invoices         Invoice[]
 }
 
 model Consignee {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String?
-  address    String?
-  phone      String?
-  altPhone   String?
-  city       String?
-  state      String?
-  country    String?
-  pinCode    String?
-  createdAt  DateTime   @default(now())
-  createdBy  String?
-  customerId Int
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  contracts  Contract[]
-}
-
-model Buyer {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String?
-  address    String?
-  phone      String?
-  altPhone   String?
-  city       String?
-  state      String?
-  country    String?
-  pinCode    String?
-  createdAt  DateTime   @default(now())
-  createdBy  String?
-  customerId Int
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  contracts  Contract[]
+  id               Int               @id @default(autoincrement())
+  name             String
+  email            String?
+  address          String?
+  phone            String?
+  altPhone         String?
+  city             String?
+  state            String?
+  country          String?
+  usciNo           String?
+  pinCode          String?
+  createdAt        DateTime          @default(now())
+  createdBy        String?
+  customerId       Int
+  customer         Customer          @relation(fields: [customerId], references: [id])
+  contracts        Contract[]
+  proformaInvoices ProformaInvoice[]
+  invoices         Invoice[]
+  packingLists     PackingList[]
 }
 
 model NotifyParty {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String?
-  address    String?
-  phone      String?
-  altPhone   String?
-  city       String?
-  state      String?
-  country    String?
-  pinCode    String?
-  createdAt  DateTime   @default(now())
-  createdBy  String?
-  customerId Int
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  contracts  Contract[]
+  id               Int               @id @default(autoincrement())
+  name             String
+  email            String?
+  address          String?
+  phone            String?
+  altPhone         String?
+  city             String?
+  state            String?
+  country          String?
+  pinCode          String?
+  usciNo           String?
+  createdAt        DateTime          @default(now())
+  createdBy        String?
+  customerId       Int
+  customer         Customer          @relation(fields: [customerId], references: [id])
+  contracts        Contract[]
+  proformaInvoices ProformaInvoice[]
+  invoices         Invoice[]
+  packingLists     PackingList[]
 }
 
 model ContactPerson {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String?
-  phone      String?
-  altPhone   String?
-  createdAt  DateTime   @default(now())
-  createdBy  String?
-  customerId Int
-  customer   Customer   @relation(fields: [customerId], references: [id])
-  contracts  Contract[]
+  id               Int               @id @default(autoincrement())
+  name             String
+  email            String?
+  address          String?
+  phone            String?
+  altPhone         String?
+  city             String?
+  state            String?
+  country          String?
+  pinCode          String?
+  usciNo           String?
+  createdAt        DateTime          @default(now())
+  createdBy        String?
+  customerId       Int
+  customer         Customer          @relation(fields: [customerId], references: [id])
+  contracts        Contract[]
+  proformaInvoices ProformaInvoice[]
+  invoices         Invoice[]
 }
 
 model Product {
-  id            Int            @id @default(autoincrement())
-  name          String
-  size          String?
-  pricePerKg    Float          @default(0)
-  imageUrl      String?
-  skuCode       String
-  createdAt     DateTime       @default(now())
-  createdBy     String?
-  contract      Contract?      @relation(fields: [contractId], references: [id])
-  contractId    Int?
-  contractItems ContractItem[]
+  id                   Int                   @id @default(autoincrement())
+  name                 String                @unique
+  // size                 String?
+  // color                String?
+  // pricePerKg           Float                 @default(0)
+  imageUrl             String?
+  skuCode              String
+  createdAt            DateTime              @default(now())
+  createdBy            String?
+  contract             Contract?             @relation(fields: [contractId], references: [id])
+  contractId           Int?
+  contractItems        ContractItem[]
+  proformaInvoiceItems ProformaInvoiceItem[]
+  invoiceItems         InvoiceItem[]
+  packingListItems     PackingListItem[]
+  colors               color[]
+  sizes                size[]
+}
+
+model color {
+  id        Int      @id @default(autoincrement())
+  color     String   @unique
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  createdBy String?
+}
+
+model size {
+  id        Int      @id @default(autoincrement())
+  size      String   @unique
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  createdBy String?
 }
 
 model TermsOfPayment {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  createdAt DateTime   @default(now())
-  createdBy String?
-  contracts Contract[]
+  id               Int               @id @default(autoincrement())
+  name             String            @unique
+  createdAt        DateTime          @default(now())
+  createdBy        String?
+  contracts        Contract[]
+  proformaInvoices ProformaInvoice[]
+  invoices         Invoice[]
 }
 
 model Contract {
-  id                     Int             @id @default(autoincrement())
-  name                   String
+  id                     Int               @id @default(autoincrement())
+  name                   String            @unique
   customerId             Int
-  customer               Customer        @relation(fields: [customerId], references: [id])
+  customer               Customer          @relation(fields: [customerId], references: [id])
   consigneeId            Int?
-  consignee              Consignee?      @relation(fields: [consigneeId], references: [id])
-  buyerId                Int?
-  buyer                  Buyer?          @relation(fields: [buyerId], references: [id])
+  consignee              Consignee?        @relation(fields: [consigneeId], references: [id])
   notifyPartyId          Int?
-  notifyParty            NotifyParty?    @relation(fields: [notifyPartyId], references: [id])
+  notifyParty            NotifyParty?      @relation(fields: [notifyPartyId], references: [id])
   contactPersonId        Int?
-  contactPerson          ContactPerson?  @relation(fields: [contactPersonId], references: [id])
+  contactPerson          ContactPerson?    @relation(fields: [contactPersonId], references: [id])
   termsOfPaymentId       Int
-  termsOfPayment         TermsOfPayment  @relation(fields: [termsOfPaymentId], references: [id])
-  createdAt              DateTime        @default(now())
+  termsOfPayment         TermsOfPayment    @relation(fields: [termsOfPaymentId], references: [id])
+  createdAt              DateTime          @default(now())
   createdBy              String
   products               Product[]
   countryOfOrigin        String
@@ -155,11 +179,13 @@ model Contract {
   portOfLoading          String?
   portOfFinalDestination String?
   operatingAirlines      String?
-  speacialCondition      String?
+  specialCondition       String?
   note                   String?
   expectedDepartureDate  DateTime?
   expectedDeliveryDate   DateTime?
   contractItems          ContractItem[]
+  proformaInvoices       ProformaInvoice[]
+  invoices               Invoice[]
 }
 
 model ContractItem {
@@ -182,4 +208,254 @@ enum Carrier {
 enum Role {
   Admin
   User
+}
+
+enum invoicepayment {
+  CFR
+  CIF
+  CPT
+}
+
+enum Currency {
+  USD
+  INR
+  EUR
+}
+
+model ProformaInvoice {
+  id                     Int                   @id @default(autoincrement())
+  customerId             Int
+  customer               Customer              @relation(fields: [customerId], references: [id])
+  contractId             Int
+  contract               Contract              @relation(fields: [contractId], references: [id])
+  proformaInvoiceNo      String                @unique
+  proformaInvoiceDate    DateTime
+  invoicepaymentterm     invoicepayment?
+  currency               Currency?             @default(USD)
+  operatingAirlines      String?
+  lcNumber               String?
+  lcDate                 DateTime?
+  otherRefrence          String?
+  countryOfOrigin        String
+  countryOfDestination   String
+  preCarriageBy          Carrier?
+  portOfLoading          String?
+  portOfFinalDestination String?
+  consigneeId            Int?
+  consignee              Consignee?            @relation(fields: [consigneeId], references: [id])
+  notifyPartyId          Int?
+  notifyParty            NotifyParty?          @relation(fields: [notifyPartyId], references: [id])
+  contactPersonId        Int?
+  contactPerson          ContactPerson?        @relation(fields: [contactPersonId], references: [id])
+  termsOfPaymentId       Int
+  termsOfPayment         TermsOfPayment        @relation(fields: [termsOfPaymentId], references: [id])
+  items                  ProformaInvoiceItem[]
+  createdAt              DateTime              @default(now())
+  createdBy              String?
+  invoices               Invoice[]
+}
+
+model ProformaInvoiceItem {
+  id                Int             @id @default(autoincrement())
+  proformaInvoiceId Int
+  proformaInvoice   ProformaInvoice @relation(fields: [proformaInvoiceId], references: [id])
+  productId         Int
+  product           Product         @relation(fields: [productId], references: [id])
+  colour            String?
+  quantity          Float
+  pricePerKg        Float
+  totalAmount       Float
+}
+
+model Invoice {
+  id                     Int              @id @default(autoincrement())
+  invoiceNo              String           @unique
+  invoiceDate            DateTime
+  customerId             Int?
+  customer               Customer?        @relation(fields: [customerId], references: [id])
+  contractId             Int?
+  contract               Contract?        @relation(fields: [contractId], references: [id])
+  proformaInvoiceId      Int?
+  proformaInvoice        ProformaInvoice? @relation(fields: [proformaInvoiceId], references: [id])
+  consigneeId            Int?
+  consignee              Consignee?       @relation(fields: [consigneeId], references: [id])
+  notifyPartyId          Int?
+  notifyParty            NotifyParty?     @relation(fields: [notifyPartyId], references: [id])
+  contactPersonId        Int?
+  contactPerson          ContactPerson?   @relation(fields: [contactPersonId], references: [id])
+  termsOfPaymentId       Int
+  termsOfPayment         TermsOfPayment   @relation(fields: [termsOfPaymentId], references: [id])
+  preCarriageBy          Carrier?
+  invoicepaymentterm     invoicepayment?
+  operatingAirlines      String?
+  countryOfOrigin        String
+  countryOfDestination   String
+  sizeScale              String?
+  packing                String
+  portOfLoading          String?
+  portOfFinalDestination String?
+  otherRefrence          String?
+  cartonWeight           Int?
+  currency               Currency?        @default(USD)
+  totalAmount            Float            @default(0)
+
+  shippingBillNo                      String?         @unique //shipment
+  shippingDate                        DateTime?
+  awbNo                               String?         @unique
+  grossWeight                         Float?
+  narration                           String?
+  stockOutFromPKSGodown               Boolean         @default(false)
+  stockOutDateTime                    DateTime?
+  factoryCode                         String?
+  lorryNo                             String?
+  shipmentTakenBy                     String?
+  shipmentHandedOverTo                String?
+  lorryInCustomWarehouse              Boolean         @default(false)
+  lorryInCustomWarehouseDateTime      DateTime?
+  lorryOutFromCustomWarehouse         Boolean         @default(false)
+  lorryOutFromCustomWarehouseDateTime DateTime?
+  passedShipmentFromCustom            Boolean         @default(false)
+  passedShipmentFromCustomDate        DateTime?
+  containerNo                         String?
+  containerStuffing                   Boolean         @default(false)
+  containerStuffingDate               DateTime?
+  containerSealNo                     String?
+  flightNo                            String?
+  trainNo                             String?
+  railOut                             Boolean         @default(false)
+  railOutDateTime                     DateTime?
+  dispatchDate                        DateTime? // Domestic shipment
+  transporterName                     String?
+  vehicleNo                           String?
+  driverName                          String?
+  driverPhone                         String?
+  ewayBillNo                          String?         @unique
+  lrNo                                String?         @unique
+  delivered                           Boolean         @default(false)
+  deliveredDate                       DateTime?
+  deliveryNarration                   String?
+  createdAt                           DateTime        @default(now())
+  createdBy                           String?
+  items                               InvoiceItem[]
+  customSale                          CustomSale?
+  bankSales                           BankSale?
+  packingList                         PackingList?
+  billOfExchange                      BillOfExchange?
+}
+
+model InvoiceItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int
+  invoice     Invoice @relation(fields: [invoiceId], references: [id])
+  productId   Int
+  product     Product @relation(fields: [productId], references: [id])
+  colour      String
+  weight      Float
+  pricePerKg  Float
+  totalAmount Float
+}
+
+model CustomSale {
+  id        Int     @id @default(autoincrement())
+  invoiceId Int     @unique
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+
+  customExchangeRate   Float
+  cifCfrValue          Float?
+  lessFreight          Float?
+  lessInsurance        Float?
+  lessCommission       Float?
+  customFobValue       Float?
+  drawBackPercentage   Float?
+  drawBackValue        Float?
+  drawBackDateReceived DateTime?
+  drawBackNarration    String?
+  focusPercentage      Float?
+  focusValue           Float?
+  focusDateReceived    DateTime?
+  createdAt            DateTime  @default(now())
+  createdBy            String?
+}
+
+model BankSale {
+  id                   Int       @id @default(autoincrement())
+  invoiceId            Int       @unique
+  invoice              Invoice   @relation(fields: [invoiceId], references: [id])
+  bankExchangeRate     Float?
+  bankRefNo            String?   @unique
+  bankRefDate          DateTime?
+  negotiationAmount    Float?
+  lessFreight          Float?
+  lessInsurance        Float?
+  lessCommissionIfAny  Float?
+  bankFobValue         Float?
+  dateOfRealisation    DateTime?
+  realisationNarration String?
+  realisationdueDate   DateTime?
+  courierCompany       String?
+  trackingNo           String?
+  createdAt            DateTime  @default(now())
+  createdBy            String?
+}
+
+model PackingList {
+  id                     Int               @id @default(autoincrement())
+  invoiceId              Int               @unique
+  invoice                Invoice           @relation(fields: [invoiceId], references: [id])
+  consigneeId            Int?
+  consignee              Consignee?        @relation(fields: [consigneeId], references: [id])
+  notifyPartyId          Int?
+  notifyParty            NotifyParty?      @relation(fields: [notifyPartyId], references: [id])
+  packingListNo          String
+  packingListDate        DateTime
+  exporterRef            String?
+  lcNo                   String?
+  lcDate                 DateTime?
+  otherRefrence          String?
+  iecNo                  String?
+  packing                String?
+  packingMeasurement     String?
+  preCarriageBy          Carrier?
+  portOfLoading          String?
+  portOfFinalDestination String?
+  countryOfOrigin        String
+  countryOfDestination   String
+  createdAt              DateTime          @default(now())
+  createdBy              String?
+  items                  PackingListItem[]
+}
+
+model PackingListItem {
+  id            Int         @id @default(autoincrement())
+  packingListId Int
+  packingList   PackingList @relation(fields: [packingListId], references: [id])
+  productId     Int
+  product       Product     @relation(fields: [productId], references: [id])
+  size          String
+  quantity      Float
+  weight        Float
+  grossWeight   Float
+  color         String
+}
+
+model BillOfExchange {
+  id                  Int       @id @default(autoincrement())
+  invoiceId           Int       @unique
+  invoice             Invoice   @relation(fields: [invoiceId], references: [id])
+  draftNo             String
+  draftDate           DateTime
+  exchangeAmount      Float
+  currency            Currency? @default(USD)
+  paymentTenor        String? // "Pay at sight", "30 days after sight"
+  payToBank           String?
+  payToBankAddress    String?
+  payToBankSwiftCode  String?
+  draweeName          String?
+  draweeAddress       String?
+  draweeUsciNo        String?
+  acWithBank          String?
+  acWithBankAddress   String?
+  acWithBankSwiftCode String?
+  createdAt           DateTime  @default(now())
+  createdBy           String?
 }

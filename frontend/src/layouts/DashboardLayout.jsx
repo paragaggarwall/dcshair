@@ -9,9 +9,9 @@ export default function DashboardLayout() {
   console.log(user?.role);
   const isAdmin = user?.role === 'Admin';
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
+    <div className="flex min-h-screen bg-[#F8FAFC] overflow-hidden">
       <Sidebar />
-      <main className="flex-1 ml-64 min-h-screen">
+      <main className="flex-1 ml-64 min-h-screen ">
         {/* Modern Header */}
         {/* <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
           <div>
@@ -38,7 +38,7 @@ export default function DashboardLayout() {
             </button>
           </div>
         </header> */}
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 overflow-hidden">
           <Outlet />
         </div>
       </main>

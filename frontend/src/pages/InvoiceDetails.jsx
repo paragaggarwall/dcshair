@@ -580,10 +580,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import CustomSelect from "../components/CustomSelect";
 import InputBox from "../components/InputBox";
-import {
-    useLazyGetalltermofpaymentQuery,
-} from "./invoiceapi/Invoiceapislice";
+
 import { useAddCustomerPartyMutation, useGetCustomerbyIdMutation } from "../customerapiSlice/apiSlicecustomer";
+import toast from "react-hot-toast";
+import { useLazyGetalltermofpaymentQuery } from "./payment_productApi/payment_productApiSlice";
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
 const labelCls = "block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5";
@@ -804,9 +804,14 @@ export default function InvoiceDetails({
         if (!invoiceData) return;
         const fetchTerms = async () => {
             try {
-                const resp = await getalltermofpayment();
-                setTermpay(resp?.data?.data ?? []);
-            } catch (e) { console.error(e); }
+                const resp = await getalltermofpayment().unwrap();
+                if (resp?.success) {
+                    setTermpay(resp?.data);
+                }
+            } catch (err) {
+                console.error(err);
+                toast.error(err.data?.message || 'fail to fetch term of payment')
+            }
         };
         fetchTerms();
     }, [invoiceData]);
@@ -817,9 +822,15 @@ export default function InvoiceDetails({
         if (!customerId) return;
         const fetchCustomer = async () => {
             try {
-                const res = await getCustomerbyId(customerId);
-                setCustomerparty(res.data);
-            } catch (e) { console.error(e); }
+                const res = await getCustomerbyId(customerId).unwrap();
+                if (res?.success) {
+                    setCustomerparty(res.data);
+                }
+
+            } catch (err) {
+                console.error(err);
+                toast.error(err.data?.message || "fail to fetch customerbyID")
+            }
         };
         fetchCustomer();
     }, [invoiceData?.customerId]);
@@ -844,9 +855,14 @@ export default function InvoiceDetails({
         const customerId = invoiceData?.customerId;
         if (!customerId) return;
         try {
-            const res = await getCustomerbyId(customerId);
-            setCustomerparty(res.data);
-        } catch (e) { console.error(e); }
+            const res = await getCustomerbyId(customerId).unwrap();
+            if (res?.success) {
+                setCustomerparty(res.data);
+            }
+        } catch (err) {
+            console.error(err);
+            toast.err(err.data?.message || "fail to fetch customerParty");
+        }
     };
 
     const hasInvoice = !!invoiceData && !!selectedInvoiceId;

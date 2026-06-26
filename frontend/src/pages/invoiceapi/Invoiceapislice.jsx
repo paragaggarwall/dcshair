@@ -15,12 +15,6 @@ export const invoiceApiSlice = apiSlice.injectEndpoints({
       })
     }),
 
-    getalltermofpayment: builder.query({
-      query: () => ({
-        url: "/contracts/allterm-payment",
-        method: "GET",
-      }),
-    }),
 
     invoicecreate: builder.mutation({
       query: ({ body }) => ({
@@ -32,11 +26,23 @@ export const invoiceApiSlice = apiSlice.injectEndpoints({
 
     getMyInvoices: builder.query({
       query: () => ({
-        url: `/invoice/getMyInvoices`,
+        url: `/invoice/getAllInvoices`,
         method: 'GET'
       })
     }),
 
+    invoicePdfGenerate: builder.mutation({
+      query: (id) => ({
+        url: `/invoice/${id}/pdf`,
+        method: 'POST',
+        responseHandler: async (response) => {
+          if (!response.ok) {
+            throw new Error('Failed to download PDF API ERROR');
+          }
+          return response.blob();
+        },
+      })
+    }),
 
 
   })
@@ -44,9 +50,9 @@ export const invoiceApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetprofomainvoiceMutation,
   useGetprofomapartyMutation,
-  useLazyGetalltermofpaymentQuery,
   useInvoicecreateMutation,
   useGetMyInvoicesQuery,
+  useInvoicePdfGenerateMutation,
 
 
 } = invoiceApiSlice

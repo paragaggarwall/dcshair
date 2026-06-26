@@ -3,25 +3,20 @@ const { contractPdfGenerator } = require('./contractPdfGenerator');
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 const PARTY_INCLUDE = {
-  customer:      true,
-  consignee:     true,
-  buyer:         true,
-  notifyParty:   true,
+  customer: true,
+  consignee: true,
+  notifyParty: true,
   contactPerson: true,
   termsOfPayment: true,
   contractItems: { include: { product: true } }
 };
 
-const optConnect = (id) => id ? { connect: { id: parseInt(id) } } : undefined;
-
-// ─── createContract ────────────────────────────────────────────────────────
 exports.createContract = async (req, res) => {
   try {
     const {
       name,
       customerId,
       consigneeId,
-      buyerId,
       notifyPartyId,
       contactPersonId,
       termsOfPaymentId,
@@ -38,124 +33,143 @@ exports.createContract = async (req, res) => {
       speacialCondition,
       note,
       expectedDepartureDate,
-      expectedDeliveryDate
+      expectedDeliveryDate,
     } = req.body;
 
-    const contract = await prisma.contract.create({
-      data: {
-        name,
-        countryOfOrigin,
-        countryOfDestination,
-        description,
-        packing,
-        insurance,
-        preCarriageBy,
-        portOfLoading,
-        portOfFinalDestination,
-        operatingAirlines,
-        speacialCondition,
-        note,
-        expectedDepartureDate: expectedDepartureDate ? new Date(expectedDepartureDate) : null,
-        expectedDeliveryDate:  expectedDeliveryDate  ? new Date(expectedDeliveryDate)  : null,
-        createdBy: req.user.email,
-        customer:      { connect: { id: parseInt(customerId) } },
-        termsOfPayment:{ connect: { id: parseInt(termsOfPaymentId) } },
-        ...(consigneeId     && { consignee:     { connect: { id: parseInt(consigneeId) } } }),
-        ...(buyerId         && { buyer:         { connect: { id: parseInt(buyerId) } } }),
-        ...(notifyPartyId   && { notifyParty:   { connect: { id: parseInt(notifyPartyId) } } }),
-        ...(contactPersonId && { contactPerson: { connect: { id: parseInt(contactPersonId) } } }),
-        contractItems: {
-          create: (items || []).map(item => ({
-            product:     { connect: { id: parseInt(item.productId) } },
-            quantity:    parseFloat(item.quantity),
-            pricePerKg:  parseFloat(item.pricePerKg),
-            totalAmount: parseFloat(item.quantity) * parseFloat(item.pricePerKg)
-          }))
-        }
+    if (!items?.length) {
+      throw new Error("At least one item is required");
+    }
+
+    const existcontract = await prisma.contract.findUnique({
+      where: {
+        name: name,
+      }
+    })
+
+    if (existcontract) {
+      throw new Error("please change the contract Name already exist");
+    }
+
+    const payload = {
+      name,
+      customerId: Number(customerId),
+      consigneeId: consigneeId ? Number(consigneeId) : null,
+      notifyPartyId: notifyPartyId ? Number(notifyPartyId) : null,
+      contactPersonId: contactPersonId ? Number(contactPersonId) : null,
+      termsOfPaymentId: Number(termsOfPaymentId),
+
+      countryOfOrigin,
+      countryOfDestination,
+      description,
+      packing,
+      insurance,
+      preCarriageBy,
+      portOfLoading,
+      portOfFinalDestination,
+      operatingAirlines,
+      specialCondition: speacialCondition,
+      note,
+      expectedDepartureDate: expectedDepartureDate ? new Date(expectedDepartureDate) : null,
+      expectedDeliveryDate: expectedDeliveryDate ? new Date(expectedDeliveryDate) : null,
+      createdBy: req.user.email,
+      contractItems: {
+        create: items.map((item) => ({
+          productId: Number(item.productId),
+          quantity: Number(item.quantity),
+          pricePerKg: Number(item.pricePerKg),
+          totalAmount: Number(item.quantity) * Number(item.pricePerKg),
+        })),
       },
-      include: PARTY_INCLUDE
+    };
+
+    let contract;
+
+    try {
+      contract = await prisma.contract.create({
+        data: payload,
+        include: PARTY_INCLUDE,
+      });
+    } catch (prismaError) {
+      console.error("Prisma Create Contract Error:", prismaError);
+
+      if (prismaError.code === "P2003") {
+        throw new Error("Invalid customer, party, product or payment term reference");
+      }
+
+      if (prismaError.code === "P2025") {
+        throw new Error("Related record not found");
+      }
+
+      throw new Error("Failed to create contract");
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Contract created successfully",
+      data: contract,
     });
-    res.status(201).json(contract);
+
   } catch (error) {
-    console.error('Error creating contract:', error);
-    res.status(400).json({ error: error.message });
+    console.error("Create Contract Error:", error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || "Something went wrong",
+      data: null,
+    });
   }
 };
 
-// ─── getContracts ──────────────────────────────────────────────────────────
 exports.getContracts = async (req, res) => {
   try {
     const contracts = await prisma.contract.findMany({
       include: PARTY_INCLUDE,
-      orderBy: { createdAt: 'desc' }
+      orderBy: {
+        createdAt: "desc",
+      },
     });
-    res.json(contracts);
+
+    if (!contracts || contracts.length === 0) {
+      throw new Error("No contracts data found");
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Fetch contracy data Successfully",
+      data: contracts,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Get Contracts Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch contracts",
+    });
   }
 };
 
 // ─── getContractOptions ────────────────────────────────────────────────────
-// Returns base lists. Customer-specific parties are fetched via getCustomerParties.
 exports.getContractOptions = async (req, res) => {
   try {
     const [customers, products, termsOfPayment] = await Promise.all([
-      prisma.customer.findMany({ select: { id: true, name: true } }),
-      prisma.product.findMany({ select: { id: true, name: true, skuCode: true } }),
-      prisma.termsOfPayment.findMany({ select: { id: true, name: true } })
+      prisma.customer.findMany({ select: { id: true, name: true, }, }),
+      prisma.product.findMany({ select: { id: true, name: true, skuCode: true, }, }),
+      prisma.termsOfPayment.findMany({ select: { id: true, name: true, }, }),
     ]);
-    res.json({ customers, products, termsOfPayment });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
 
-// ─── getCustomerParties ────────────────────────────────────────────────────
-// Returns all consignees, buyers, notifyParties, contactPersons for a customer
-exports.getCustomerParties = async (req, res) => {
-  try {
-    const customerId = parseInt(req.params.customerId);
-    const [consignees, buyers, notifyParties, contactPersons] = await Promise.all([
-      prisma.consignee.findMany({     where: { customerId }, select: { id: true, name: true, email: true, phone: true, address: true, city: true, country: true } }),
-      prisma.buyer.findMany({         where: { customerId }, select: { id: true, name: true, email: true, phone: true, address: true, city: true, country: true } }),
-      prisma.notifyParty.findMany({   where: { customerId }, select: { id: true, name: true, email: true, phone: true, address: true, city: true, country: true } }),
-      prisma.contactPerson.findMany({ where: { customerId }, select: { id: true, name: true, email: true, phone: true } })
-    ]);
-    res.json({ consignees, buyers, notifyParties, contactPersons });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    if (!customers || !products || !termsOfPayment) {
+      throw new Error('Failed to fetch contract options');
+    }
 
-// ─── createParty ───────────────────────────────────────────────────────────
-// Generic create for any sub-entity type belonging to a customer
-exports.createParty = async (req, res) => {
-  try {
-    const { type, customerId,data } = req.body;
-    const models = { consignee: 'consignee', buyer: 'buyer', notifyParty: 'notifyParty', contactPerson: 'contactPerson' };
-    if (!models[type]) return res.status(400).json({ error: 'Invalid party type' });
-
-    const record = await prisma[models[type]].create({
-      data: { ...data, customerId: parseInt(customerId), createdBy: req.user.email }
+    return res.status(200).json({
+      success: true,
+      message: 'Contract options fetched successfully',
+      data: { customers, products, termsOfPayment, },
     });
-    res.status(201).json(record);
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// ─── createTermsOfPayment ──────────────────────────────────────────────────
-exports.createTermsOfPayment = async (req, res) => {
-  try {
-    const { name } = req.body;
-    if (!name?.trim()) return res.status(400).json({ error: 'Name is required' });
-    const term = await prisma.termsOfPayment.create({
-      data: { name: name.trim(), createdBy: req.user.email }
+    console.error('getContractOptions Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Contract options Api Error',
     });
-    res.status(201).json(term);
-  } catch (error) {
-    if (error.code === 'P2002') return res.status(400).json({ error: 'This term already exists' });
-    res.status(500).json({ error: error.message });
   }
 };
 
@@ -194,5 +208,71 @@ exports.previewContractPdf = async (req, res) => {
   } catch (error) {
     console.error('Error previewing contract PDF:', error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+// ─── createTermsOfPayment ──────────────────────────────────────────────────
+exports.createTermsOfPayment = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      throw new Error("term of paymet name require");
+    }
+
+    const existingTerm = await prisma.termsOfPayment.findFirst({
+      where: {
+        name: name,
+      },
+    });
+
+    if (existingTerm) {
+      throw new Error("Terms of payment already exists");
+    }
+
+    const term = await prisma.termsOfPayment.create({
+      data: {
+        name: name,
+        createdBy: req.user?.email,
+      },
+    });
+
+    if (!term) {
+      throw new Error("fail to create term of payment");
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Terms of payment created successfully",
+      data: term,
+    });
+  } catch (error) {
+    console.error("Create Terms Of Payment Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "create payment term Error",
+    });
+  }
+};
+
+exports.getAllTermsOfPayment = async (req, res) => {
+  try {
+    const data = await prisma.termsOfPayment.findMany();
+
+    if (!data) {
+      throw new Error("data is not found termofPayment")
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "fetch allterm of payment Successfully",
+      data,
+    });
+  } catch (error) {
+    console.error("Error fetching terms of payment:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CustomSelect from '../components/CustomSelect';
 import InputBox from '../components/InputBox';
 import toast from 'react-hot-toast';
+import { useAddCustomerPartyMutation, useDeleteCustomerPartyMutation, useGetCustomerbyIdMutation, useUpdateCustomerMutation } from '../customerapiSlice/apiSlicecustomer';
 
 const allCountries = [
     'India', 'China', 'Japan', 'South Korea', 'North Korea', 'Thailand', 'Vietnam', 'Malaysia',
@@ -38,48 +39,31 @@ const SECTION_TO_API_TYPE = {
     contactPersons: 'contactPerson',
 };
 
-const SECTION_LABELS = {
-    consignees: 'Consignee',
-    notifyParties: 'Notify Party',
-    contactPersons: 'Contact Person',
-};
 
 function AddPartyModal({ sectionKey, customerId, onClose, onAdded }) {
     const [form, setForm] = useState({ ...emptyParty });
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-
-    const label = SECTION_LABELS[sectionKey];
+    const [addCustomerParty, { isLoading: saving }] = useAddCustomerPartyMutation();
+    const label = SECTION_TO_API_TYPE[sectionKey];
     const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
     const handleSave = async () => {
-        const required = ['name', 'email', 'phone', 'address', 'city', 'state', 'pinCode', 'usciNo'];
-        for (const f of required) {
-            if (!form[f]?.trim()) {
-                setError(`${f === 'usciNo' ? 'USCI No.' : f.charAt(0).toUpperCase() + f.slice(1)} is required`);
-                return;
-            }
-        }
-        if (String(form.pinCode).length !== 6) {
-            setError('Postal Code must be exactly 6 digits');
-            return;
-        }
-
-        setSaving(true);
-        setError('');
         try {
-            const res = await api.post('/contracts/party', {
+            const body = {
                 type: SECTION_TO_API_TYPE[sectionKey],
                 customerId,
                 data: form,
-            });
-            onAdded(res.data);
-            toast.success(`${label} added successfully`);
-            onClose();
+            }
+
+            const res = await addCustomerParty(body).unwrap();
+            if (res?.success) {
+                onAdded(res.data);
+                toast.success(`${label} added successfully`);
+                onClose();
+            }
+
         } catch (err) {
-            setError(err?.response?.data?.error || 'Failed to save. Please try again.');
-        } finally {
-            setSaving(false);
+            console.log("add customer party:", err.data?.message);
+            toast.error(err?.data?.message || err.message || "fail to add party")
         }
     };
 
@@ -117,21 +101,13 @@ function AddPartyModal({ sectionKey, customerId, onClose, onAdded }) {
 
                 {/* Form */}
                 <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
-                    {error && (
-                        <div className="text-xs text-red-600 font-semibold bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                            {error}
-                        </div>
-                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <InputBox title="Full Name" isMandatory inputFor="m-name" value={form.name} placeholder="e.g. Acme Corp" handleChangeFunction={set('name')} />
                         <InputBox title="Email Address" isMandatory inputFor="m-email" value={form.email} placeholder="contact@company.com" handleChangeFunction={set('email')} />
                         <InputBox title="Primary Phone" isMandatory inputFor="m-phone" value={form.phone} placeholder="+1 234 567 8900" handleChangeFunction={set('phone')} />
                         <InputBox title="Alternate Phone" inputFor="m-altPhone" value={form.altPhone} placeholder="Optional" handleChangeFunction={set('altPhone')} />
                     </div>
-                    <div className="border-t border-dashed border-gray-100 pt-4">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                            <Home className="w-3 h-3" /> Address
-                        </p>
+                    <div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="md:col-span-2">
                                 <InputBox title="Street Address" isMandatory inputFor="m-address" value={form.address} placeholder="Apartment, Street, Area" handleChangeFunction={set('address')} />
@@ -139,10 +115,7 @@ function AddPartyModal({ sectionKey, customerId, onClose, onAdded }) {
                             <InputBox title="City" isMandatory inputFor="m-city" value={form.city} placeholder="e.g. Mumbai" handleChangeFunction={set('city')} />
                             <InputBox title="State / Province" isMandatory inputFor="m-state" value={form.state} placeholder="e.g. Maharashtra" handleChangeFunction={set('state')} />
                             <InputBox title="Postal Code" isMandatory inputFor="m-pinCode" value={form.pinCode} placeholder="e.g. 122506" type="number"
-                                handleChangeFunction={e => {
-                                    const val = e.target.value.replace(/\D/g, '');
-                                    if (val.length <= 6) setForm(p => ({ ...p, pinCode: val }));
-                                }}
+                                handleChangeFunction={set('pinCode')}
                             />
                             <InputBox title="USCI No." isMandatory inputFor="m-usciNo" value={form.usciNo} placeholder="e.g. 658565423534658" handleChangeFunction={set('usciNo')} />
                             <div className="md:col-span-2">
@@ -178,37 +151,30 @@ function AddPartyModal({ sectionKey, customerId, onClose, onAdded }) {
 function PartyFields({ data, onChange, prefix }) {
     return (
         <div className="space-y-5 pt-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <InputBox title="Full Name" isMandatory inputFor={`${prefix}-name`} value={data.name} placeholder="e.g. Acme Corp" handleChangeFunction={e => onChange('name', e.target.value)} />
                 <InputBox title="Email Address" isMandatory inputFor={`${prefix}-email`} value={data.email} placeholder="contact@company.com" handleChangeFunction={e => onChange('email', e.target.value)} />
                 <InputBox title="Primary Phone" isMandatory inputFor={`${prefix}-phone`} value={data.phone} placeholder="+1 234 567 8900" handleChangeFunction={e => onChange('phone', e.target.value)} />
                 <InputBox title="Alternate Phone" inputFor={`${prefix}-altPhone`} value={data.altPhone} placeholder="Optional" handleChangeFunction={e => onChange('altPhone', e.target.value)} />
-            </div>
-            <div className="border-t border-dashed border-gray-100 pt-4">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Home className="w-3 h-3" /> Address
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                        <InputBox title="Street Address" isMandatory inputFor={`${prefix}-address`} value={data.address} placeholder="Apartment, Street, Area" handleChangeFunction={e => onChange('address', e.target.value)} />
-                    </div>
-                    <InputBox title="City" isMandatory inputFor={`${prefix}-city`} value={data.city} placeholder="e.g. Mumbai" handleChangeFunction={e => onChange('city', e.target.value)} />
-                    <InputBox title="State / Province" isMandatory inputFor={`${prefix}-state`} value={data.state} placeholder="e.g. Maharashtra" handleChangeFunction={e => onChange('state', e.target.value)} />
-                    <InputBox title="Postal Code" isMandatory inputFor={`${prefix}-pinCode`} value={data.pinCode} placeholder="e.g. 122506" type="number"
-                        handleChangeFunction={e => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            if (val.length <= 6) onChange('pinCode', val);
-                        }}
+
+
+                <div className="md:col-span-2">
+                    <InputBox title="Street Address" isMandatory inputFor={`${prefix}-address`} value={data.address} placeholder="Apartment, Street, Area" handleChangeFunction={e => onChange('address', e.target.value)} />
+                </div>
+                <InputBox title="City" isMandatory inputFor={`${prefix}-city`} value={data.city} placeholder="e.g. Mumbai" handleChangeFunction={e => onChange('city', e.target.value)} />
+                <InputBox title="State / Province" isMandatory inputFor={`${prefix}-state`} value={data.state} placeholder="e.g. Maharashtra" handleChangeFunction={e => onChange('state', e.target.value)} />
+                <InputBox title="Postal Code" isMandatory inputFor={`${prefix}-pinCode`} value={data.pinCode} placeholder="e.g. 122506" type="number"
+                    handleChangeFunction={e => onChange('pinCode', e.target.value)}
+                />
+                <InputBox title="USCI No." isMandatory inputFor={`${prefix}-usciNo`} value={data.usciNo} placeholder="e.g. 658565423534658" handleChangeFunction={e => onChange('usciNo', e.target.value)} />
+                <div className="md:col-span-2">
+                    <CustomSelect
+                        label="Country"
+                        options={allCountries.map(c => ({ id: c, name: c }))}
+                        value={data.country}
+                        onChange={val => onChange('country', val)}
                     />
-                    <InputBox title="USCI No." isMandatory inputFor={`${prefix}-usciNo`} value={data.usciNo} placeholder="e.g. 658565423534658" handleChangeFunction={e => onChange('usciNo', e.target.value)} />
-                    <div className="md:col-span-2">
-                        <CustomSelect
-                            label="Country"
-                            options={allCountries.map(c => ({ id: c, name: c }))}
-                            value={data.country}
-                            onChange={val => onChange('country', val)}
-                        />
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -262,13 +228,13 @@ function AccordionSection({
             </div>
 
             {/* Body */}
-            <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[1400px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            {/* <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[1400px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
                 <div className="px-6 pb-6 border-t border-gray-50 space-y-4">
                     {entries.length > 0 && (
                         <div className="flex items-end gap-2 pt-1">
                             <div className="flex-1">
                                 <CustomSelect
-                                    label={`Select ${SECTION_LABELS[sectionKey]} to Edit`}
+                                    label={`Select ${SECTION_TO_API_TYPE[sectionKey]} to Edit`}
                                     options={dropdownOptions}
                                     value={String(selectedIndex)}
                                     onChange={val => onSelectIndex(Number(val))}
@@ -290,6 +256,87 @@ function AccordionSection({
                         />
                     )}
                 </div>
+            </div> */}
+            <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[1400px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                <div className="border-t border-gray-50">
+                    <div className="grid grid-cols-12 min-h-[500px]">
+                        {/* LEFT PANEL */}
+                        <div className="col-span-4 border-r border-gray-100 bg-gray-50">
+                            <div className="p-4">
+                                <h3 className="text-sm font-bold text-gray-700 mb-3">
+                                    {title} List
+                                </h3>
+
+                                <div className="space-y-2">
+                                    {entries.map((entry, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={(e) => { e.preventDefault(); onSelectIndex(idx)}}
+                                            //val => onSelectIndex(Number(val))
+                                            className={`w-full text-left p-3 rounded-xl transition-all cursor-pointer ${selectedIndex === idx ? 'bg-[#003366] text-white shadow-md' : 'bg-white hover:bg-blue-50 border border-gray-100'}`}
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className={`font-semibold text-sm ${selectedIndex === idx ? 'text-white' : 'text-gray-800'}`}>
+                                                        {entry.name || `Entry ${idx + 1}`}
+                                                    </p>
+
+                                                    <p className={`text-xs mt-1 ${selectedIndex === idx ? 'text-blue-100' : 'text-gray-500'}`}>
+                                                        {entry.email || 'No email'}
+                                                    </p>
+                                                </div>
+
+                                                {selectedIndex === idx && (
+                                                    <div className="w-2 h-2 rounded-full bg-white" />
+                                                )}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT PANEL */}
+                        <div className="col-span-8 p-6">
+                            {selectedEntry ? (
+                                <>
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div>
+                                            <h3 className="font-bold text-gray-900">
+                                                Edit {selectedEntry.name || `Entry ${selectedIndex + 1}`}
+                                            </h3>
+                                            <p className="text-xs text-gray-500">
+                                                Update details and save
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => onDeleteEntry(selectedIndex)}
+                                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 cursor-pointer"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            Delete
+                                        </button>
+                                    </div>
+
+                                    <PartyFields
+                                        prefix={`${sectionKey}-${selectedIndex}`}
+                                        data={selectedEntry}
+                                        onChange={(field, value) =>
+                                            onFieldChange(selectedIndex, field, value)
+                                        }
+                                    />
+                                </>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-400">
+                                    Select an item from the left panel
+                                </div>
+                            )}
+                        </div>
+
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -305,15 +352,12 @@ export default function EditCustomer() {
     const navigate = useNavigate();
     const { id } = useParams();
     const customerId = Number(id);
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [openSection, setOpenSection] = useState(null);
-    // null = modal closed  |  'consignees' / 'notifyParties' / 'contactPersons' = modal open
     const [modalSection, setModalSection] = useState(null);
-
-    const [selectedIndexes, setSelectedIndexes] = useState({
-        consignees: 0, notifyParties: 0, contactPersons: 0,
-    });
+    const [selectedIndexes, setSelectedIndexes] = useState({ consignees: 0, notifyParties: 0, contactPersons: 0, });
+    const [updateCustomer, { isLoading: isSubmitting }] = useUpdateCustomerMutation();
+    const [getCustomerbyId] = useGetCustomerbyIdMutation();
+    const [deleteCustomerParty] = useDeleteCustomerPartyMutation();
 
     const [formData, setFormData] = useState({
         name: '', email: '', phone: '', altPhone: '',
@@ -329,22 +373,25 @@ export default function EditCustomer() {
     useEffect(() => {
         const fetchCustomer = async () => {
             try {
-                const res = await api.get(`/customers/${id}`);
-                setFormData({
-                    ...res.data,
-                    consignees: res.data.consignees?.length ? res.data.consignees : [{ ...emptyParty }],
-                    buyers: res.data.buyers?.length ? res.data.buyers : [{ ...emptyParty }],
-                    notifyParties: res.data.notifyParties?.length ? res.data.notifyParties : [{ ...emptyParty }],
-                    contactPersons: res.data.contactPersons?.length ? res.data.contactPersons : [{ ...emptyParty }],
-                });
-            } catch {
-                toast.error("Failed to fetch customer");
+                const res = await getCustomerbyId(id).unwrap();
+                if (res?.success) {
+                    setFormData({
+                        ...res.data,
+                        consignees: res.data.consignees?.length ? res.data.consignees : [{ ...emptyParty }],
+                        buyers: res.data.buyers?.length ? res.data.buyers : [{ ...emptyParty }],
+                        notifyParties: res.data.notifyParties?.length ? res.data.notifyParties : [{ ...emptyParty }],
+                        contactPersons: res.data.contactPersons?.length ? res.data.contactPersons : [{ ...emptyParty }],
+                    });
+                }
+
+
+            } catch (err) {
+                console.error(`fetchcustomererror:${err}`)
+                toast.error(err.data.message || "Failed to fetch customer");
             }
         };
         if (id) fetchCustomer();
     }, [id]);
-
-    // ── Handlers ──────────────────────────────────────────────────────────────
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -359,7 +406,6 @@ export default function EditCustomer() {
         });
     };
 
-    // Called when modal POSTs successfully — appends new party & selects it
     const handlePartyAdded = (sectionKey, newParty) => {
         setFormData(prev => {
             const updated = [...prev[sectionKey], newParty];
@@ -373,42 +419,38 @@ export default function EditCustomer() {
     const handleDeleteEntry = async (partyType, entryIndex) => {
         const party = formData[partyType][entryIndex];
 
-        console.log("Deleting party:", party); // should show id
-
         if (!party?.id) {
-            toast.error("Party ID not found");
-            return;
+            throw new Error("party_id is required for delete")
         }
-
         try {
-            await api.post('/contracts/party/delete', {
+            const body = {
                 type: SECTION_TO_API_TYPE[partyType],
                 customerId,
                 partyid: party.id
-            });
+            }
+            const res = await deleteCustomerParty(body).unwrap();
 
-            setFormData(prev => {
-                const updated = prev[partyType].filter((_, i) => i !== entryIndex);
+            if (res?.success) {
+                setFormData(prev => {
+                    const updated = prev[partyType].filter((_, i) => i !== entryIndex);
+                    return {
+                        ...prev,
+                        [partyType]: updated.length ? updated : [{ ...emptyParty }]
+                    };
+                });
 
-                return {
+                setSelectedIndexes(prev => ({
                     ...prev,
-                    [partyType]: updated.length ? updated : [{ ...emptyParty }]
-                };
-            });
-
-            setSelectedIndexes(prev => ({
-                ...prev,
-                [partyType]: Math.max(0, entryIndex - 1)
-            }));
-
-            toast.success("Deleted successfully");
+                    [partyType]: Math.max(0, entryIndex - 1)
+                }));
+                toast.success("Deleted successfully");
+            }
 
         } catch (err) {
-            console.log(err.response?.data);
-            toast.error(err.response?.data?.error || "Delete failed");
+            console.log(err || "fail delete");
+            toast.error(err?.data?.message || err.message || "Delete failed");
         }
     };
-    // ── Validation ────────────────────────────────────────────────────────────
 
     const validateForm = () => {
         const required = [
@@ -423,17 +465,13 @@ export default function EditCustomer() {
         for (const f of required) {
             if (!formData[f.key]?.trim()) { toast.error(`${f.label} is required`); return false; }
         }
-        if (String(formData.pinCode).length !== 6) {
-            toast.error('Postal Code must be exactly 6 digits'); return false;
-        }
+
         const validateParty = (party, name) => {
             if (!party.name?.trim()) return true;
             for (const f of ['email', 'phone', 'address', 'city', 'state', 'pinCode', 'usciNo']) {
                 if (!party[f]?.trim()) { toast.error(`${name}: ${f} is required`); return false; }
             }
-            if (String(party.pinCode).length !== 6) {
-                toast.error(`${name}: Postal Code must be 6 digits`); return false;
-            }
+            // 5
             return true;
         };
         for (const c of formData.consignees) { if (!validateParty(c, 'Consignee')) return false; }
@@ -442,29 +480,38 @@ export default function EditCustomer() {
         return true;
     };
 
-    // ── Submit ────────────────────────────────────────────────────────────────
+    const removeMetaFields = (items) => {
+        return items
+            .filter(item => item.name?.trim())
+            .map(({
+                id,
+                createdAt,
+                createdBy,
+                customerId,
+                ...rest
+            }) => rest);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm()) return;
-        setIsSubmitting(true);
+        // if (!validateForm()) return;
         try {
             const payload = {
-                consignees: formData.consignees.filter(c => c.name?.trim()),
-                notifyParties: formData.notifyParties.filter(n => n.name?.trim()),
-                contactPersons: formData.contactPersons.filter(cp => cp.name?.trim()),
+                consignees: removeMetaFields(formData.consignees),
+                notifyParties: removeMetaFields(formData.notifyParties),
+                contactPersons: removeMetaFields(formData.contactPersons),
             };
-            await api.post(`/customers/update/${id}`, payload);
-            toast.success("Customer updated successfully");
-            navigate('/customers');
+            const res = await updateCustomer({ id, body: payload }).unwrap();
+            if (res?.success) {
+                toast.success(res.message || "Customer updated successfully");
+                navigate('/customers');
+            }
+
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update customer.');
-        } finally {
-            setIsSubmitting(false);
+            console.error(err.data?.message || 'Failed to update customer')
+            toast.error(err.data?.message || 'Failed to update customer.');
         }
     };
-
-    // ── Render ────────────────────────────────────────────────────────────────
 
     return (
         <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
@@ -508,7 +555,7 @@ export default function EditCustomer() {
                             <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[#003366] border border-blue-100">Required</span>
                         </div>
                         <div className="px-6 py-5">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                                 <InputBox title="Buyer Name" isMandatory inputFor="name" value={formData.name} placeholder="-" handleChangeFunction={handleInputChange} isInputBoxDisabled />
                                 <InputBox title="Email Address" isMandatory inputFor="email" value={formData.email} placeholder="-" handleChangeFunction={handleInputChange} isInputBoxDisabled />
                                 <InputBox title="Primary Phone" inputFor="phone" value={formData.phone} placeholder="-" handleChangeFunction={handleInputChange} isInputBoxDisabled />
@@ -518,11 +565,7 @@ export default function EditCustomer() {
                                 </div>
                                 <InputBox title="City" isMandatory inputFor="city" value={formData.city} placeholder="-" handleChangeFunction={handleInputChange} isInputBoxDisabled />
                                 <InputBox title="State / Province" isMandatory inputFor="state" value={formData.state} placeholder="-" handleChangeFunction={handleInputChange} isInputBoxDisabled />
-                                <InputBox title="Postal Code" isMandatory inputFor="pinCode" value={formData.pinCode} placeholder="-" type="number"
-                                    handleChangeFunction={e => {
-                                        const val = e.target.value.replace(/\D/g, '');
-                                        if (val.length <= 6) setFormData(p => ({ ...p, pinCode: val }));
-                                    }} isInputBoxDisabled />
+                                <InputBox title="Postal Code" isMandatory inputFor="pinCode" value={formData.pinCode} placeholder="-" type="number" handleChangeFunction={handleInputChange} isInputBoxDisabled />
                                 <InputBox title="USCI No." isMandatory inputFor="usciNo" value={formData.usciNo} placeholder="-" handleChangeFunction={handleInputChange} isInputBoxDisabled />
                                 <div className="md:col-span-2">
                                     <CustomSelect label="Country" options={allCountries.map(c => ({ id: c, name: c }))} value={formData.country} onChange={val => setFormData(p => ({ ...p, country: val }))} isDisabled />

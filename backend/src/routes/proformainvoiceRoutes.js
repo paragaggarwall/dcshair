@@ -1,14 +1,16 @@
 const express = require('express');
 const authenticateToken = require('../middleware/auth');
-const contractController = require('../controllers/contracts/contractController');
-const proformaInvoice = require('../controllers/proformainvoice/proformainvoicegenerate')
+const proformaInvoice = require('../controllers/proformainvoice/proformainvoicegenerate');
+const validate = require('../middleware/validate');
+const { proformaInvoiceSchema } = require('../validations/proformainvoicevalidation');
 
 const router = express.Router();
 
-router.get('/allcontract',authenticateToken,contractController.getContracts);
-router.post('/pdfgenerate',authenticateToken,proformaInvoice.proformainvoicepdf)
-router.get('/:contractId/parties', authenticateToken, proformaInvoice.getContractParties);
-
-
+router.get('/', proformaInvoice.getAllProforma)
+router.get('/party/:proformaid', proformaInvoice.getproformaparty)
+router.get('/:contractId/parties', proformaInvoice.getContractParties);
+router.post('/create', validate(proformaInvoiceSchema), proformaInvoice.proformainvoicecreate)
+router.get('/:id/pdf', proformaInvoice.proformainvoicePdf);
+router.get('/:id/preview', proformaInvoice.proformainvoicePdf);
 
 module.exports = router;

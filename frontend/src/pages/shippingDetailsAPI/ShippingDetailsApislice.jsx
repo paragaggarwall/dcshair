@@ -4,7 +4,7 @@ export const shippingApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
 
         getInvoices: builder.query({
-            query: () => "/invoice/getMyInvoices",
+            query: () => "/invoice/getAllInvoices",
             keepUnusedDataFor: 0,
         }),
         getInvoiceById: builder.query({

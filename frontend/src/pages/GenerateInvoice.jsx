@@ -915,9 +915,9 @@ import {
     useGetprofomainvoiceMutation,
     useGetprofomapartyMutation,
     useInvoicecreateMutation,
-    useLazyGetalltermofpaymentQuery,
 } from "./invoiceapi/Invoiceapislice";
 import { useAddCustomerPartyMutation, useGetCustomerbyIdMutation } from "../customerapiSlice/apiSlicecustomer";
+import { useLazyGetalltermofpaymentQuery } from "./payment_productApi/payment_productApiSlice";
 
 
 // ── Style tokens ──────────────────────────────────────────────────────────────
@@ -1438,10 +1438,6 @@ export default function InvoiceGenerate() {
             airline_no: airlineNo,
             otherRef,
             customerId: buyersOrderNo,
-            buyerId: d.buyerId ?? "",
-            buyerDate: d.buyer?.createdAt
-                ? new Date(d.buyer.createdAt).toLocaleDateString("en-GB")
-                : "",
             consigneeId: consigneeid ?? "",
             notifyPartyId: notifyPartyid ?? "",
             contactPersonId: contactPersonid ?? "",
@@ -1455,22 +1451,21 @@ export default function InvoiceGenerate() {
             totalKgs,
             packing: String(totalKgs > 0 ? totalKgs / 25 : 0),
             operatingAirlines: airlineNo,
-            buyer: d.buyer ?? null,
-            consignee: customerparty?.consignees?.find((c) => c.id === consigneeid) ?? null,
-            notifyParty: customerparty?.notifyParties?.find((n) => n.id === notifyPartyid) ?? null,
-            contactPerson: customerparty?.contactPersons?.find((c) => c.id === contactPersonid) ?? null,
+            // consignee: customerparty?.consignees?.find((c) => c.id === consigneeid) ?? null,
+            // notifyParty: customerparty?.notifyParties?.find((n) => n.id === notifyPartyid) ?? null,
+            // contactPerson: customerparty?.contactPersons?.find((c) => c.id === contactPersonid) ?? null,
+            // termsOfPayment: termpay?.find((c) => c.id === termsOfPayment) ?? null,
             invoicepaymentterm: paymentterm ?? null,
-            termsOfPayment: termpay?.find((c) => c.id === termsOfPayment) ?? null,
             currency: currency ?? null,
             totalAmount: totalAmount,
             items: contractItems.map((item) => ({
                 productId: item.productId,
                 name: item.product?.name ?? "",
-                size: item.product?.size ?? "",
+                // size: item.product?.size ?? "",
                 skuCode: item.product?.skuCode ?? "",
                 quantity: parseFloat(item.quantity) || 0,
                 pricePerKg: parseFloat(item.pricePerKg ?? item.product?.pricePerKg) || 0,
-                totalAmount: item.totalAmount ?? 0,
+                // totalAmount: item.totalAmount ?? 0,
             })),
         };
     }, [d, form, proformaid, contractItems, totalKgs, termpay, customerparty]);

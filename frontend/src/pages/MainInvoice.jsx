@@ -1,240 +1,6 @@
 
 
 
-
-
-// import { useCallback, useEffect, useState } from "react";
-// import { AnimatePresence, motion } from "framer-motion";
-// import {
-//     Landmark,
-//     FileText,
-//     Ship,
-//     Truck,
-//     ChevronRight,
-//     Download,
-//     Save,
-// } from "lucide-react";
-// import CustomSaleDetails from "./CustomSaleDetails";
-// import ShippingDetails from "./ShippingDetails";
-// import ShipmentTrackingForm from "./ShippingTracking";
-// import BankSaleDetails from "./BankSale";
-// import Invoice from "./Invoice";
-// import { useGetInvoicesQuery } from "./shippingDetailsAPI/ShippingDetailsApislice";
-// import CustomSelect from "../components/CustomSelect";
-// import { useLocation } from "react-router-dom";
-// import InvoiceDetails from "./InvoiceDetails";
-
-// // ─── Tab config ───────────────────────────────────────────────────────────────
-// const TABS = [
-//     {
-//         id: "invoice-details",
-//         label: "Invoice Details",
-//         shortLabel: "Invoice",
-//         icon: Ship,
-//         component: InvoiceDetails,
-//         description: "Bill details & document tracking",
-//     },
-
-//     {
-//         id: "shipping-details",
-//         label: "Shipping Details",
-//         shortLabel: "Shipping",
-//         icon: Ship,
-//         component: ShippingDetails,
-//         description: "Bill details & document tracking",
-//     },
-//     {
-//         id: "shipment-tracking",
-//         label: "Shipment Tracking",
-//         shortLabel: "Tracking",
-//         icon: Truck,
-//         component: ShipmentTrackingForm,
-//         description: "Factory to customs & post-clearance activities",
-//     },
-//     {
-//         id: "custom-sale",
-//         label: "Custom Sale",
-//         shortLabel: "Custom",
-//         icon: FileText,
-//         component: CustomSaleDetails,
-//         description: "Custom sale, drawback & focus incentives",
-//     },
-//     {
-//         id: "bank-sale",
-//         label: "Bank Sale",
-//         shortLabel: "Bank",
-//         icon: Landmark,
-//         component: BankSaleDetails,
-//         description: "Bank sale & realisation entries",
-//     },
-
-
-// ];
-
-// // ─── Main component ───────────────────────────────────────────────────────────
-// export default function MainInvoice() {
-//     const location = useLocation();
-//     const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
-
-//     const [activeTab, setActiveTab] = useState(TABS[0].id);
-
-//     const activeConfig = TABS.find((t) => t.id === activeTab);
-//     const ActiveComponent = activeConfig?.component ?? null;
-
-
-//     const { data: getMyInvoices, isLoading: invoicesLoading, reset: resetMutation } = useGetInvoicesQuery();
-//     const invoicesData = getMyInvoices?.data ?? [];
-
-//     const handleInvoiceChange = useCallback(
-//         (id) => {
-//             setSelectedInvoiceId(id);
-//             resetMutation?.();
-//         },
-//         [resetMutation]
-//     );
-
-//     const invoiceOptions = invoicesData.map((inv) => ({
-//         id: inv.id,
-//         name: inv.invoiceNo,
-//     }));
-
-
-//     useEffect(() => {
-//         if (location.state?.selectedInvoiceId) {
-//             setSelectedInvoiceId(location.state.selectedInvoiceId);
-//         }
-//     }, [location.state]);
-
-//     return (
-//         <div className="flex flex-col overflow-hidden h-screen bg-slate-100 ">
-//             {/* ══ TOP HEADER BAR ══════════════════════════════════════════════ */}
-//             <div className="flex-shrink-0 bg-white border-b border-slate-200 shadow-sm z-30">
-
-//                 {/* Brand row */}
-//                 <div className="flex items-center gap-3 px-6 py-3 border-b border-slate-100">
-//                     <div className="w-8 h-8 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0">
-//                         <FileText className="w-4 h-4 text-white" />
-//                     </div>
-//                     <div className="flex items-center gap-2 min-w-0">
-//                         <h1 className="text-sm font-bold text-slate-800 tracking-wide">
-//                             Invoice Management
-//                         </h1>
-//                         <ChevronRight className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" />
-//                         <span className="text-sm font-semibold text-slate-500 truncate">
-//                             {activeConfig?.label}
-//                         </span>
-//                     </div>
-//                     <div className="ml-auto w-64 flex">
-//                         <CustomSelect
-//                             label=""
-//                             options={invoiceOptions}
-//                             value={selectedInvoiceId}
-//                             onChange={handleInvoiceChange}
-//                             placeholder={
-//                                 invoicesLoading ? "Loading invoices…" : "Select Invoice No."
-//                             }
-//                             searchable
-//                         />
-
-
-//                     </div>
-
-//                     <div className="flex gap-2">
-//                         <button
-//                             type="button"
-//                             // onClick={}
-//                             className="flex items-center gap-2 bg-white border border-slate-200 hover:border-[#003366] hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 hover:text-[#003366] text-sm font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer"
-//                         >
-
-//                             Cancel
-
-//                         </button>
-//                         <button
-//                             type="button"
-//                             // onClick={}
-//                             className="flex items-center gap-2 bg-[#003366] hover:bg-[#004080] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer"
-//                         >
-
-//                             <><Save className="w-3.5 h-3.5" /> Invoice Save</>
-
-//                         </button>
-//                     </div>
-//                 </div>
-
-//                 {/* Tab row */}
-//                 <div className="flex items-end justify-between gap-0 px-5 m-2 rounded-xl border border-[#003366]">
-//                     {TABS.map((tab) => {
-//                         const Icon = tab.icon;
-//                         const isActive = tab.id === activeTab;
-
-//                         return (
-//                             <button
-//                                 key={tab.id}
-//                                 type="button"
-//                                 onClick={() => setActiveTab(tab.id)}
-//                                 className={`
-//                                     relative flex items-center gap-2 px-7 py-2.5  text-xs font-semibold
-//                                     transition-all duration-150 whitespace-nowrap flex-shrink-0 border-b-2
-//                                     focus:outline-none 
-//                                     ${isActive
-//                                         ? "text-slate-800 border-slate-800 bg-white"
-//                                         : "text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50"
-//                                     }
-//                                 `}
-//                             >
-//                                 <Icon
-//                                     className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-slate-700" : "text-slate-400"}`}
-//                                 />
-//                                 {/* Full label on md+, short on mobile */}
-//                                 <span className="hidden sm:inline">{tab.label}</span>
-//                                 <span className="sm:hidden">{tab.shortLabel}</span>
-
-//                                 {/* Active underline pill */}
-//                                 {isActive && (
-//                                     <motion.span
-//                                         layoutId="tab-underline"
-//                                         className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-800 rounded-t"
-//                                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
-//                                     />
-//                                 )}
-//                             </button>
-//                         );
-//                     })}
-//                 </div>
-//             </div>
-
-//             {/* ══ TAB CONTENT ════════════════════════════════════════════════ */}
-//             <div className="flex-1 min-h-0 ">
-
-//                 <AnimatePresence mode="wait">
-//                     <motion.div
-//                         key={activeTab}
-//                         initial={{ opacity: 0, y: 6 }}
-//                         animate={{ opacity: 1, y: 0 }}
-//                         exit={{ opacity: 0, y: -6 }}
-//                         transition={{ duration: 0.18 }}
-//                         className="h-screen overflow-hidden"
-//                     >
-//                         {ActiveComponent && <ActiveComponent
-//                             selectedInvoiceId={selectedInvoiceId}
-//                             setSelectedInvoiceId={setSelectedInvoiceId}
-//                         />}
-//                     </motion.div>
-//                 </AnimatePresence>
-//             </div>
-//         </div>
-//     );
-// }
-
-
-
-
-
-
-
-
-
-
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -270,6 +36,13 @@ const TABS = [
         component: ShippingDetails,
     },
     {
+        id: "shipment-tracking",
+        label: "Shipment Tracking",
+        shortLabel: "Tracking",
+        icon: Truck,
+        component: ShipmentTrackingForm,
+    },
+    {
         id: "custom-sale",
         label: "Custom Sale",
         shortLabel: "Custom",
@@ -283,13 +56,7 @@ const TABS = [
         icon: Landmark,
         component: BankSaleDetails,
     },
-    {
-        id: "shipment-tracking",
-        label: "Shipment Tracking",
-        shortLabel: "Tracking",
-        icon: Truck,
-        component: ShipmentTrackingForm,
-    },
+
 ];
 
 
@@ -482,13 +249,13 @@ export default function MainInvoice() {
                 }
                 : allForm.customSale,
 
-            bankSale: d.bankSales?.length
+            bankSale: d.bankSales
                 ? {
                     ...allForm.bankSale,
-                    ...d.bankSales[0],
-                    bankRefDate: d.bankSales[0].bankRefDate?.split("T")[0] || "",
-                    dateOfRealisation: d.bankSales[0].dateOfRealisation?.split("T")[0] || "",
-                    realisationdueDate: d.bankSales[0].realisationdueDate?.split("T")[0] || "",
+                    ...d.bankSales,
+                    bankRefDate: d.bankSales.bankRefDate?.split("T")[0] || "",
+                    dateOfRealisation: d.bankSales.dateOfRealisation?.split("T")[0] || "",
+                    realisationdueDate: d.bankSales.realisationdueDate?.split("T")[0] || "",
                 }
                 : allForm.bankSale,
 
@@ -622,7 +389,7 @@ export default function MainInvoice() {
                 </div>
 
                 {/* Tab row */}
-                <div className="flex items-end gap-0 px-5 m-2 rounded-xl border border-[#003366]">
+                <div className="flex items-end gap-0 px-5 m-2 rounded-xl justify-around border border-[#003366]">
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = tab.id === activeTab;

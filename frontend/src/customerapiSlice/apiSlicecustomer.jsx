@@ -18,10 +18,34 @@ export const customerApiSlice = apiSlice.injectEndpoints({
 
     addCustomerParty: builder.mutation({
       query: (body) => ({
-        url: "/contracts/party",
+        url: "/customers/party",
         method: "POST",
         body
       }),
+    }),
+
+    addCustomer: builder.mutation({
+      query: (body) => ({
+        url: '/customers',
+        method: 'POST',
+        body,
+      })
+    }),
+
+    updateCustomer: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/customers/update/${id}`,
+        method: 'POST',
+        body,
+      })
+    }),
+
+    deleteCustomerParty: builder.mutation({
+      query: (body) => ({
+        url: '/customers/party/delete',
+        method: 'POST',
+        body,
+      })
     }),
 
   })
@@ -30,4 +54,7 @@ export const {
   useGetMyCustomerMutation,
   useGetCustomerbyIdMutation,
   useAddCustomerPartyMutation,
+  useAddCustomerMutation,
+  useUpdateCustomerMutation,
+  useDeleteCustomerPartyMutation,
 } = customerApiSlice
