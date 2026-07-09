@@ -9,6 +9,7 @@
   --border: #e2e8f0;
   --sidebar: #003366;
   --sidebar-foreground: #ffffff;
+  --defaultBgColor: #1d4ed8;
 }
 
 @theme {

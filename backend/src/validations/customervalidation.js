@@ -45,6 +45,7 @@ const createCustomerSchema = Joi.object({
     name: Joi.string().trim().min(2).max(100).required(),
     email: Joi.string().email().required(),
     phone: Joi.string().trim().required(),
+    altPhone: Joi.string().trim().allow(""),
     address: Joi.string().trim().required(),
     city: Joi.string().trim().required(),
     state: Joi.string().trim().required(),
@@ -52,11 +53,11 @@ const createCustomerSchema = Joi.object({
     usciNo: Joi.string().trim().required(),
     pinCode: Joi.string().trim().length(6).pattern(/^[0-9]+$/).required(),
     // relations
-    consignees: Joi.array().items(consigneeSchema).optional(),
-    notifyParties: Joi.array().items(notifyPartySchema).optional(),
-    contactPersons: Joi.array().items(contactPersonSchema).optional(),
+    consignees: Joi.array().items(consigneeSchema).required().min(1),
+    notifyParties: Joi.array().items(notifyPartySchema).required().min(1),
+    contactPersons: Joi.array().items(contactPersonSchema).required().min(1),
 
-}).unknown(true);
+});
 
 const updateCustomerSchema = Joi.object({
     name: Joi.string().trim().min(2).max(100).optional(),

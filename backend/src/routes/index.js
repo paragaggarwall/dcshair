@@ -16,7 +16,6 @@ router.use('/customers', customerRoutes);
 router.use('/products', productRoutes);
 //not check contract api
 router.use('/contracts', contractRoutes);
-
 router.use('/proformainvoice', proformainvoiceRoutes);
 router.use('/invoice', invoiceRoutes);
 

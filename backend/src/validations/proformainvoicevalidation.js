@@ -13,7 +13,6 @@ const proformaInvoiceSchema = Joi.object({
     paymentterm: Joi.string().required(),
     lcnumber: Joi.string().required(),
     lcDate: Joi.date().required(),
-    otherRef: Joi.string().allow("", null),
     countryOfOrigin: Joi.string().required(),
     countryOfFinalDestination: Joi.string().required(),
     portOfLoading: Joi.string().trim().required(),
@@ -22,10 +21,12 @@ const proformaInvoiceSchema = Joi.object({
     operatingAirlines: Joi.string().trim().required(),
     flightNo: Joi.string().trim().required(),
     preCarriageBy: Joi.string().valid("Sea", "Air", "Road",).required(),
-    totalAmount: Joi.number().min(1).required(),
-    totalKgs: Joi.number().min(1).required(),
+    otherRef: Joi.string().allow("", null),
     description: Joi.string().allow("", null),
-    packing: Joi.number().min(0).optional(),
+    packing: Joi.string().trim().allow(""),
+    shipingMark: Joi.string().trim().allow(""),
+    sizeScale: Joi.string().trim().allow(""),
+    cartonweight: Joi.number().integer().required(""),
     items: Joi.array().items(contractItemSchema).min(1).required(),
 });
 

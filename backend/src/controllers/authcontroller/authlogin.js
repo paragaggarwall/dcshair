@@ -31,8 +31,6 @@ exports.login = async (req, res) => {
     }
 };
 
-
-
 exports.logout = async (req, res) => {
     const cookies = req.cookies;
     const isProduction = process.env.NODE_ENV === "production";

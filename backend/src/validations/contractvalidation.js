@@ -2,15 +2,15 @@ const Joi = require("joi");
 
 const contractItemSchema = Joi.object({
     productId: Joi.number().integer().required(),
-    name: Joi.string().trim().required(),
-    skuCode: Joi.string().allow("").required(),
-    quantity: Joi.number().positive().required(),
+    weight: Joi.number().positive().required(),
     pricePerKg: Joi.number().positive().required(),
-    color: Joi.string().allow("").optional(),
+    color: Joi.string().allow("").required(),
+    size: Joi.string().allow("").required(),
+    Amount: Joi.number().positive().required(),
 });
 
 const createContractSchema = Joi.object({
-    name: Joi.string().trim().required(),
+    contractname: Joi.string().trim().required(),
     customerId: Joi.number().integer().required(),
     consigneeId: Joi.number().integer().allow(null, ""),
     notifyPartyId: Joi.number().integer().allow(null, ""),
@@ -28,8 +28,12 @@ const createContractSchema = Joi.object({
     description: Joi.string().allow("").optional(),
     packing: Joi.string().allow("").optional(),
     insurance: Joi.string().allow("").optional(),
-    speacialCondition: Joi.string().allow("").optional(),
-    note: Joi.string().allow("").optional(),
+    shipingMark: Joi.string().allow(""),
+    cartonweight: Joi.number().required(),
+    sizeScale: Joi.string().required(),
+    currency: Joi.string().trim().required(),
+    otherref: Joi.string().trim().allow(""),
+    flightNo: Joi.string().trim().allow(""),
     items: Joi.array().items(contractItemSchema).min(1).required(),
 });
 

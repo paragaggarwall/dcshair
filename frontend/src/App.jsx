@@ -78,6 +78,7 @@ import { AuthProvider } from "./components/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DashboardLayout from "./layouts/DashboardLayout";
 import PageLoader from "./components/PageLoader";
+import Demo from "./components/AddProduct";
 
 // Lazy Loaded Pages
 const Login = lazy(() => import("./pages/Login"));
@@ -106,6 +107,7 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/Demo" element={<Demo/> } />
 
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout />}>

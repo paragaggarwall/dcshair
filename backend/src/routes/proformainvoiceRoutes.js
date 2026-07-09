@@ -6,10 +6,10 @@ const { proformaInvoiceSchema } = require('../validations/proformainvoicevalidat
 
 const router = express.Router();
 
-router.get('/', proformaInvoice.getAllProforma)
-router.get('/party/:proformaid', proformaInvoice.getproformaparty)
+router.get('/', proformaInvoice.getAllProforma);
+router.get('/party/:proformaid', proformaInvoice.getproformaparty);
 router.get('/:contractId/parties', proformaInvoice.getContractParties);
-router.post('/create', validate(proformaInvoiceSchema), proformaInvoice.proformainvoicecreate)
+router.post('/create', validate(proformaInvoiceSchema), proformaInvoice.proformainvoicecreate);
 router.get('/:id/pdf', proformaInvoice.proformainvoicePdf);
 router.get('/:id/preview', proformaInvoice.proformainvoicePdf);
 

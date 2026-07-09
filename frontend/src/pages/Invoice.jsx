@@ -267,7 +267,6 @@ export default function Invoice() {
   ];
 
 
-
   async function handleDownload(e, pi) {
     e.stopPropagation();
     try {
@@ -488,7 +487,7 @@ export default function Invoice() {
 
                     {/* Invoice */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 ">
                         <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-[#003366] shrink-0">
                           <Receipt className="w-4 h-4" />
                         </div>

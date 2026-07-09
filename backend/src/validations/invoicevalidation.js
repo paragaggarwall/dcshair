@@ -15,6 +15,7 @@ const invoiceSchema = Joi.object({
     currency: Joi.string().valid("USD", "INR", "EUR").required(),
     preCarriageBy: Joi.string().valid("Sea", "Air", "Road").required(),
     operatingAirlines: Joi.string().required(),
+    flightNo: Joi.string().allow(""),
     countryOfOrigin: Joi.string().required(),
     countryOfFinalDestination: Joi.string().required(),
     portOfLoading: Joi.string().required(),
@@ -23,10 +24,11 @@ const invoiceSchema = Joi.object({
     lcnumber: Joi.string().required(),
     lcDate: Joi.date().required(),
     otherRef: Joi.string().allow("", null),
-    airline_no: Joi.string().required(),
     description: Joi.string().allow("", null),
-    totalAmount: Joi.number().required(),
-    totalKgs: Joi.number().required(),
+    shipingMark: Joi.string().allow(""),
+    sizeScale: Joi.string().allow(""),
+    cartonweight: Joi.number().allow(""),
+    totalAmount:Joi.number().allow("",null),
     items: Joi.array().items(contractItemSchema).min(1).required(),
 });
 
