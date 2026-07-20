@@ -307,7 +307,7 @@ export default function Customers() {
       const response = res?.data;
       if (res.error) throw new Error(res.error?.data?.message);
       setCustomers(response?.data);
-      toast.success(response.message);
+      // toast.success(response.message);
     } catch (err) {
       console.error('Error fetching customers:', err);
       toast.error(err.message);

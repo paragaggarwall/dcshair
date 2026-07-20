@@ -21,7 +21,7 @@ export default function Contracts() {
       const res = await getAllContract().unwrap();
       if (res?.success) {
         setContracts(res.data);
-        toast.success(res.message)
+        // toast.success(res.message)
       }
     } catch (err) {
       console.error('Error fetching contracts:', err.message);

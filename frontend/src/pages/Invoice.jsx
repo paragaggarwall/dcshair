@@ -501,12 +501,12 @@ export default function Invoice() {
                                 },
                               })
                             }
-                            className="text-sm font-bold text-gray-900 truncate cursor-pointer hover:text-blue-600"
+                            className="text-sm font-bold text-gray-900 truncate underline decoration-2 cursor-pointer hover:text-blue-600"
                           >
                             {inv.invoiceNo}
                           </p>
                           <p className="text-[10px] text-gray-400 uppercase tracking-tight font-semibold mt-0.5">
-                            #INV-{String(inv.id).padStart(4, '0')}
+                            #INV-{String(inv.id).padStart(1, '0')}
                           </p>
                         </div>
                       </div>

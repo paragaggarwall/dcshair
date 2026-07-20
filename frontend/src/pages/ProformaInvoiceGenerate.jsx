@@ -534,7 +534,7 @@ export default function ProformaInvoiceGenerate() {
             {/* ── HEADER (fixed) ── */}
             <div className="flex items-center gap-4 bg-white z-10 sticky top-0 border-b border-slate-100 px-4 py-4">
                 <button
-                    onClick={() => navigate("/proformainvoice")}
+                    onClick={() => navigate("/proforma-invoice")}
                     className="p-2 bg-white hover:bg-slate-50 rounded-xl text-slate-400 hover:text-slate-700 transition-all shadow-sm border border-slate-100 cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
