@@ -300,7 +300,11 @@ exports.getAllInvoices = async (req, res) => {
     const data = await prisma.invoice.findMany({
       include: {
         customer: true,
-      }
+      },
+      orderBy: {
+        id: "desc",
+      },
+
     });
 
     if (!data) {

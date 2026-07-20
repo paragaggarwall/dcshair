@@ -668,7 +668,10 @@ exports.getAllProforma = async (req, res) => {
         const proforma = await prisma.proformaInvoice.findMany({
             include: {
                 customer: true,
-            }
+            },
+            orderBy: {
+                id: "desc",
+            },
         });
 
         if (!proforma) {

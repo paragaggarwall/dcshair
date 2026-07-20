@@ -10,7 +10,11 @@ const prisma = require('../../db');
 
 exports.getCustomers = async (req, res) => {
   try {
-    const customers = await prisma.customer.findMany();
+    const customers = await prisma.customer.findMany({
+      orderBy: {
+        id: "desc",
+      },
+    });
     if (!customers) { throw new Error("customers not found"); }
     return res.status(200).json({
       success: true,
