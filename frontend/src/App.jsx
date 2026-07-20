@@ -107,12 +107,10 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/Demo" element={<Demo/> } />
-
+            <Route path="/Demo" element={<Demo />} />
             <Route element={<ProtectedRoute />}>
               <Route element={<DashboardLayout />}>
                 <Route path="/" element={<Dashboard />} />
-
                 <Route path="customers">
                   <Route index element={<Customers />} />
                   <Route path="add" element={<AddCustomer />} />

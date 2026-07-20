@@ -127,16 +127,6 @@ function PartySelector({
     );
 }
 
-
-
-
-
-
-
-
-
-
-
 const PARTY_TYPES = {
     consignee: {
         label: "Consignee",
