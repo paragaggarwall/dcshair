@@ -74,7 +74,7 @@ exports.createCustomer = async (req, res) => {
       }
     });
     if (customerEmailExists) {
-      throw new Error('Customer already exists');
+      throw new Error('Customer email already exists');
     }
 
     const createData = {

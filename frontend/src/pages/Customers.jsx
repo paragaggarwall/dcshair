@@ -452,7 +452,7 @@ export default function Customers() {
                     className="hover:bg-blue-50/30 transition-colors"
                   >
                     {/* Client Name */}
-                    <td className="px-8 py-4 ">
+                    <td className="px-8 py-4">
                       <button
                         onClick={() => navigate(`/customers/edit/${client.id}`)}
                         className="group flex items-center gap-3 p-1 rounded-xl text-[#003366] hover:bg-[#004080] transition-all duration-300 active:scale-95 cursor-pointer"
@@ -461,12 +461,12 @@ export default function Customers() {
                           {client.name?.charAt(0)?.toUpperCase()}
                         </div>
                         <div className="min-w-0 text-left">
-                          <p className="text-sm font-bold text-gray-900 group-hover:text-white truncate transition-colors duration-300">
+                          <p className="text-sm font-bold text-gray-900 group-hover:text-white truncate transition-colors duration-300 underline decoration-2 ">
                             {client.name}
                           </p>
-                          <p className="text-[10px] uppercase tracking-tight font-semibold mt-0.5 text-gray-400 group-hover:text-blue-100 transition-colors duration-300">
+                          {/* <p className="text-[10px] uppercase tracking-tight font-semibold mt-0.5 text-gray-400 group-hover:text-blue-100 transition-colors duration-300">
                             ID: DCS-{client.id}
-                          </p>
+                          </p> */}
                         </div>
                       </button>
                     </td>
