@@ -1306,7 +1306,7 @@ export default function ProformaInvoiceGenerate() {
                 <div className="flex gap-3 ml-auto">
                     <button
                         type="button"
-                        onClick={() => navigate("/proformainvoice")}
+                        onClick={() => navigate("/proforma-invoice")}
                         className="px-8 py-3 rounded-xl font-bold text-sm text-gray-500 hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-pointer"
                     >
                         Cancel
