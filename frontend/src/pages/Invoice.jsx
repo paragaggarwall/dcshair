@@ -505,9 +505,9 @@ export default function Invoice() {
                           >
                             {inv.invoiceNo}
                           </p>
-                          <p className="text-[10px] text-gray-400 uppercase tracking-tight font-semibold mt-0.5">
+                          {/* <p className="text-[10px] text-gray-400 uppercase tracking-tight font-semibold mt-0.5">
                             #INV-{String(inv.id).padStart(1, '0')}
-                          </p>
+                          </p> */}
                         </div>
                       </div>
                     </td>

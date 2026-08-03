@@ -632,7 +632,7 @@ export default function ShippingDetails({
         <div className="h-[calc(100vh-15vh)] flex flex-col bg-gray-50">
 
             {/* ── Invoice meta strip (shown when data is available) ── */}
-            <header className="flex-shrink-0 z-20 bg-white border-b border-gray-100 shadow-sm">
+            {/* <header className="flex-shrink-0 z-20 bg-white border-b border-gray-100 shadow-sm">
                 <AnimatePresence>
                     {originalData && (
                         <motion.div
@@ -651,7 +651,7 @@ export default function ShippingDetails({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </header>
+            </header> */}
 
             {/* ── Empty state ── */}
             {!selectedInvoiceId && (

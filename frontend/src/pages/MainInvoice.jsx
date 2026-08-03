@@ -395,7 +395,8 @@ export default function MainInvoice() {
                 </div>
 
                 {/* Tab row */}
-                <div className="flex items-end gap-0 px-5 m-2 rounded-xl justify-around border border-[#003366]">
+              
+                <div className="flex-1 flex justify-evenly items-center w-ful gap-1 p-1 m-2 rounded-xl bg-slate-50 border border-[#003366]/20 shadow-sm">
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = tab.id === activeTab;
@@ -405,28 +406,40 @@ export default function MainInvoice() {
                                 type="button"
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`
-                                    relative flex items-center gap-2 px-7 py-2.5 text-xs font-semibold
-                                    transition-all duration-150 whitespace-nowrap flex-shrink-0 border-b-2
-                                    focus:outline-none
-                                    ${isActive
-                                        ? "text-slate-800 border-slate-800 bg-white"
-                                        : "text-slate-500 border-transparent hover:text-slate-700 hover:bg-slate-50"
+                    relative flex-1 flex items-center justify-center gap-2 px-5 py-2
+          rounded-lg text-xs font-semibold transition-all duration-200
+          focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+          focus-visible:outline-[#003366]/60 cursor-pointer
+                    ${isActive
+                                        ? "text-[#003366]"
+                                        : "text-slate-500 hover:text-slate-700 hover:bg-white/60"
                                     }
-                                `}
+                `}
                             >
-                                <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${isActive ? "text-slate-700" : "text-slate-400"}`} />
-                                <span className="hidden sm:inline">{tab.label}</span>
-                                <span className="sm:hidden">{tab.shortLabel}</span>
+                                {isActive && (
+                                    <motion.span
+                                        layoutId="tab-active-bg"
+                                        className="absolute inset-0 rounded-lg bg-white shadow-[0_1px_3px_rgba(0,51,102,0.15)]"
+                                        transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                                    />
+                                )}
+
+                                <Icon className={`relative z-10 w-3.5 h-3.5 flex-shrink-0 transition-colors ${isActive ? "text-[#003366]" : "text-slate-400"}`} />
+                                <span className="relative z-10 hidden sm:inline">{tab.label}</span>
+                                <span className="relative z-10 sm:hidden">{tab.shortLabel}</span>
 
                                 {/* dirty indicator dot */}
                                 {isActive && hasDirty && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
+                                    <span className="relative z-10 flex-shrink-0 w-1.5 h-1.5">
+                                        <span className="absolute inset-0 rounded-full bg-amber-400 animate-ping opacity-75" />
+                                        <span className="relative w-1.5 h-1.5 rounded-full bg-amber-500 block" />
+                                    </span>
                                 )}
 
                                 {isActive && (
                                     <motion.span
                                         layoutId="tab-underline"
-                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-800 rounded-t"
+                                        className="absolute -bottom-1 left-3 right-3 h-0.5 bg-[#003366] rounded-full"
                                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                     />
                                 )}
@@ -464,6 +477,8 @@ export default function MainInvoice() {
                     </motion.div>
                 </AnimatePresence>
             </div>
+
+
         </div>
     );
 }

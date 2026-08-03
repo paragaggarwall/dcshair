@@ -962,11 +962,11 @@ export default function ShipmentTrackingForm({
   return (
 
     <div className="flex flex-col h-[calc(100vh-15vh)] bg-slate-50">
-      <div className="shrink-0 bg-white border-b border-slate-200 z-20 shadow-sm">
-        <div className="flex items-center justify-between gap-4 px-6 py-3">
+      {/* <div className="shrink-0 bg-white border-b border-slate-200 z-20 shadow-sm">
+        <div className="flex items-center justify-between gap-4 px-6 py-3"> */}
 
           {/* Invoice meta strip */}
-          <AnimatePresence>
+          {/* <AnimatePresence>
             {originalData && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -985,7 +985,7 @@ export default function ShipmentTrackingForm({
           </AnimatePresence>
 
         </div>
-      </div>
+      </div> */}
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         <AnimatePresence mode="wait">
@@ -1019,7 +1019,7 @@ export default function ShipmentTrackingForm({
               className="p-6 space-y-5 max-w-6xl mx-auto"
             >
 
-              <Section title="invoice" icon={Landmark} delay={0.05}>
+              {/* <Section title="invoice" icon={Landmark} delay={0.05}>
 
 
                 <InputBox
@@ -1123,7 +1123,7 @@ export default function ShipmentTrackingForm({
                   isInputBoxDisabled
                 />
 
-              </Section>
+              </Section> */}
 
               <Section title="invoice" icon={Landmark} delay={0.05}>
                 <InputBox
