@@ -7,11 +7,11 @@ const { invoiceSchema, updateInvoiceSchema } = require('../validations/invoiceva
 const router = express.Router();
 
 
-router.get('/getAllInvoices',invoiceController.getAllInvoices)
-router.get('/:id',invoiceController.getInvoicebyId)
-router.post('/create',validate(invoiceSchema),invoiceController.createinvoice)
-router.post('/updateInvoice/:id',validate(updateInvoiceSchema),invoiceController.updateInvoiceDetails)
-router.post('/:id/pdf',invoiceController.getInvoicePdf)
+router.get('/getAllInvoices', invoiceController.getAllInvoices)
+router.get('/:id', invoiceController.getInvoicebyId)
+router.post('/create', validate(invoiceSchema), invoiceController.createinvoice)
+router.post('/updateInvoice/:id', validate(updateInvoiceSchema), invoiceController.updateInvoiceDetails)
+router.post('/:id/pdf', invoiceController.getInvoicePdf)
 
 
 // router.post('/shipping-details',authenticateToken,invoiceController.createshippingDetails)

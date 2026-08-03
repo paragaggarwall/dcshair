@@ -17,7 +17,7 @@ import {
     useGetInvoicesQuery,
 } from "./shippingDetailsAPI/ShippingDetailsApislice";
 import CustomSelect from "../components/CustomSelect";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const TABS = [
@@ -90,8 +90,10 @@ export const allForm = {
     shippingBillNo: "",
     shippingDate: "",
     awbNo: "",
+    awbNoDate: "",
     grossWeight: "",
     narration: "",
+    cha: "",
     stockOutFromPKSGodown: false,
     stockOutDateTime: "",
     factoryCode: "",
@@ -161,6 +163,7 @@ export const allForm = {
 
 export default function MainInvoice() {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const [selectedInvoiceId, setSelectedInvoiceId] = useState("");
     const [activeTab, setActiveTab] = useState(TABS[0].id);
@@ -207,8 +210,10 @@ export default function MainInvoice() {
             shippingBillNo: d.shippingBillNo || "",
             shippingDate: d.shippingDate?.split("T")[0] || "",
             awbNo: d.awbNo || "",
+            awbNoDate: d.awbNoDate?.split("T")[0] || "",
             grossWeight: d.grossWeight || "",
             narration: d.narration || "",
+            cha: d.cha || "",
             stockOutFromPKSGodown: d.stockOutFromPKSGodown || false,
             stockOutDateTime: d.stockOutDateTime?.split("T")[0] || "",
             factoryCode: d.factoryCode || "",
@@ -279,7 +284,8 @@ export default function MainInvoice() {
 
     const handleCancel = useCallback(() => {
         setDirtyData({});
-    }, []);
+        navigate(-1);
+    }, [navigate]);
 
     const markDirty = useCallback((key, value) => {
         setDirtyData((prev) => ({ ...prev, [key]: value }));
@@ -312,7 +318,7 @@ export default function MainInvoice() {
             return;
         }
         try {
-            console.log("dsgsfvergv", dirtyData);
+            // console.log("dsgsfvergv", dirtyData);
             const payload = buildNestedPayload(dirtyData);
             const res = await updateAllInvoiceDetail({
                 id: selectedInvoiceId,
@@ -369,7 +375,7 @@ export default function MainInvoice() {
                         <button
                             type="button"
                             onClick={handleCancel}
-                            disabled={!hasDirty}
+                            // disabled={!hasDirty}
                             className="flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed text-slate-600 text-sm font-semibold px-4 py-2 rounded-xl transition-all cursor-pointer"
                         >
                             Cancel

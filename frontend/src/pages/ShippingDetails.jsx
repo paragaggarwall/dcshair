@@ -705,12 +705,12 @@ export default function ShippingDetails({
                                 handleChangeFunction={set("awbNo")}
                             />
                             <InputBox
-                                title="Dated"
-                                inputFor="dated"
+                                title="awb Date"
+                                inputFor="awbNoDate"
                                 type="date"
                                 placeholder="DD-MM-YYYY"
-                                value={form.dated}
-                                handleChangeFunction={set("dated")}
+                                value={form.awbNoDate}
+                                handleChangeFunction={set("awbNoDate")}
                             />
                             <div className="md:col-span-2">
                                 <InputBox

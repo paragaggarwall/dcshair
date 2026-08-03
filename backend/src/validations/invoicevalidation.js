@@ -28,7 +28,7 @@ const invoiceSchema = Joi.object({
     shipingMark: Joi.string().allow(""),
     sizeScale: Joi.string().allow(""),
     cartonweight: Joi.number().allow(""),
-    totalAmount:Joi.number().allow("",null),
+    totalAmount: Joi.number().allow("", null),
     items: Joi.array().items(contractItemSchema).min(1).required(),
 });
 
@@ -42,6 +42,8 @@ const updateInvoiceSchema = Joi.object({
     // operatingAirlines: Joi.string().trim(),
     // countryOfOrigin: Joi.string().trim(),
     // countryOfDestination: Joi.string().trim(),
+
+
     sizeScale: Joi.string().trim(),
     packing: Joi.string().trim(),
     portOfLoading: Joi.string().trim(),
@@ -53,8 +55,10 @@ const updateInvoiceSchema = Joi.object({
     shippingBillNo: Joi.string().trim(),
     shippingDate: Joi.date(),
     awbNo: Joi.string().trim(),
+    awbNoDate: Joi.date(),
     grossWeight: Joi.number(),
     narration: Joi.string().trim(),
+    cha: Joi.string().trim(),
     stockOutFromPKSGodown: Joi.boolean(),
     stockOutDateTime: Joi.date(),
     factoryCode: Joi.string().trim(),

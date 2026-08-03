@@ -290,11 +290,6 @@ const toPrismaDateTime = (dateTime) => {
 
 
 
-
-
-
-
-
 exports.getAllInvoices = async (req, res) => {
   try {
     const data = await prisma.invoice.findMany({
@@ -556,8 +551,10 @@ exports.updateInvoiceDetails = async (req, res) => {
           shippingBillNo: invoiceData.shippingBillNo,
           shippingDate: invoiceData.shippingDate ? new Date(invoiceData.shippingDate) : undefined,
           awbNo: invoiceData.awbNo,
+          awbNoDate: invoiceData.awbNoDate ? new Date(invoiceData.awbNoDate) : undefined,
           grossWeight: invoiceData.grossWeight ? Number(invoiceData.grossWeight) : undefined,
           narration: invoiceData.narration,
+          cha: invoiceData.cha,
           stockOutFromPKSGodown: invoiceData.stockOutFromPKSGodown,
           stockOutDateTime: invoiceData.stockOutDateTime ? new Date(invoiceData.stockOutDateTime) : undefined,
           factoryCode: invoiceData.factoryCode,
