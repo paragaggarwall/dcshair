@@ -750,7 +750,7 @@ export default function InvoiceDetails({
                                         markDirty(field, value);
                                     }}
                                     onCreateParty={handleCreatePartyApi}
-                                    onPartyCreated={() => {}}
+                                    onPartyCreated={() => { }}
                                 />
                             </Section>
 
@@ -821,7 +821,7 @@ export default function InvoiceDetails({
                                 {contractItems.length === 0 ? (
                                     <p className="text-sm text-slate-300 italic py-6 text-center">No products on this invoice</p>
                                 ) : (
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 max-h-[40vh] overflow-y-auto">
                                         {contractItems.map((item, i) => {
                                             const prod = item.product;
                                             const qty = parseFloat(item.weight) || 0;
@@ -836,7 +836,7 @@ export default function InvoiceDetails({
                                                     <div className={`${roCls} flex-col !items-start text-slate-800`}>
                                                         <p className="font-medium leading-snug">{prod?.name ?? "—"}</p>
                                                     </div>
-                                                    <div className={`${roCls} justify-end text-slate-800`}>{prod?.size ?? "—"}</div>
+                                                    <div className={`${roCls} justify-end text-slate-800`}>{item?.size ?? "—"}</div>
                                                     <div className={`${roCls} justify-end ${qty === 0 ? "text-slate-300 italic" : "text-slate-800"}`}>{qty === 0 ? "—" : qty.toLocaleString()}</div>
                                                     <div className={`${roCls} justify-end ${rate === 0 ? "text-slate-300 italic" : "text-slate-800"}`}>{rate === 0 ? "—" : rate.toFixed(2)}</div>
                                                     <div className={`${roCls} justify-end font-bold ${total === 0 ? "text-slate-300 italic" : "text-slate-700"}`}>{total === 0 ? "—" : total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</div>

@@ -1607,7 +1607,7 @@ export default function ProformaInvoiceGenerate() {
                                             No products on this contract
                                         </p>
                                     ) : (
-                                        <div className="space-y-3">
+                                        <div className="space-y-3 max-h-[40vh] overflow-y-auto">
                                             {contractItems.map((item, i) => {
                                                 const prod = item.product;
                                                 const qty = parseFloat(item.weight) || 0;

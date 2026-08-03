@@ -103,16 +103,37 @@ export default function ShipmentTrackingForm({
 
 
   const handleCheckbox = (field, dateField) => (checked) => {
+    const originalChecked = originalData?.[field] ?? false;
+    const originalDate = originalData?.[dateField] ?? "";
+
     setform((prev) => ({
       ...prev,
       [field]: checked,
       ...(dateField && !checked ? { [dateField]: "" } : {}),
     }));
 
-    markDirty(field, checked);
+    // Checkbox dirty
+    if (checked === originalChecked) {
+      setDirtyData((prev) => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    } else {
+      markDirty(field, checked);
+    }
 
-    if (!checked && dateField) {
-      markDirty(dateField, "");
+    // Date dirty
+    if (dateField && !checked) {
+      if (originalDate === "") {
+        setDirtyData((prev) => {
+          const updated = { ...prev };
+          delete updated[dateField];
+          return updated;
+        });
+      } else {
+        markDirty(dateField, "");
+      }
     }
   };
 
@@ -311,9 +332,9 @@ export default function ShipmentTrackingForm({
                 <InputBox
                   title="Mobile No."
                   type="number"
-                  value={form.mobileNo}
+                  value={form.driverPhone}
                   handleChangeFunction={handleChange}
-                  inputFor="mobileNo"
+                  inputFor="driverPhone"
                   placeholder="-"
                   icon={<Phone size={13} />}
                 />
@@ -328,9 +349,9 @@ export default function ShipmentTrackingForm({
                 />
                 <InputBox
                   title="Port"
-                  value={form.port}
+                  value={form.portOfLoading}
                   handleChangeFunction={handleChange}
-                  inputFor="port"
+                  inputFor="portOfLoading"
                   placeholder="-"
                   icon={<Anchor size={13} />}
                 />
@@ -346,11 +367,11 @@ export default function ShipmentTrackingForm({
 
                 <CheckboxDateField
                   label="Stock Out From PKS"
-                  checked={form.stockOutFromPKS}
-                  onChange={handleCheckbox("stockOutFromPKS", "stockOutFromPKSDate")}
-                  name="stockOutFromPKS"
-                  dateValue={form.stockOutFromPKSDate}
-                  dateField="stockOutFromPKSDate"
+                  checked={form.stockOutFromPKSGodown}
+                  onChange={handleCheckbox("stockOutFromPKSGodown", "stockOutDateTime")}
+                  name="stockOutFromPKSGodown"
+                  dateValue={form.stockOutDateTime}
+                  dateField="stockOutDateTime"
                   setForm={setform}
                   markDirty={markDirty}
                 />
@@ -429,11 +450,11 @@ export default function ShipmentTrackingForm({
 
                 <CheckboxDateField
                   label="Container Stuffing Date"
-                  checked={form.containerStuffingDate}
-                  onChange={handleCheckbox("containerStuffingDate", "containerStuffingDateVal")}
-                  name="containerStuffingDate"
-                  dateValue={form.containerStuffingDateVal}
-                  dateField="containerStuffingDateVal"
+                  checked={form.containerStuffing}
+                  onChange={handleCheckbox("containerStuffing", "containerStuffingDate")}
+                  name="containerStuffing"
+                  dateValue={form.containerStuffingDate}
+                  dateField="containerStuffingDate"
                   setForm={setform}
                   markDirty={markDirty}
                 />
@@ -441,11 +462,11 @@ export default function ShipmentTrackingForm({
 
                 <CheckboxDateField
                   label="Rail Out Date"
-                  checked={form.railOutDate}
-                  onChange={handleCheckbox("railOutDate", "railOutDateVal")}
-                  name="railOutDate"
-                  dateValue={form.railOutDateVal}
-                  dateField="railOutDateVal"
+                  checked={form.trainOut}
+                  onChange={handleCheckbox("trainOut", "trainOutDateTime")}
+                  name="trainOut"
+                  dateValue={form.trainOutDateTime}
+                  dateField="trainOutDateTime"
                   setForm={setform}
                   markDirty={markDirty}
                 />

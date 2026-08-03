@@ -112,8 +112,8 @@ export const allForm = {
     containerSealNo: "",
     flightNo: "",
     trainNo: "",
-    railOut: false,
-    railOutDateTime: "",
+    trainOut: false,
+    trainOutDateTime: "",
     dispatchDate: "",
     transporterName: "",
     vehicleNo: "",
@@ -232,8 +232,8 @@ export default function MainInvoice() {
             containerSealNo: d.containerSealNo || "",
             flightNo: d.flightNo || "",
             trainNo: d.trainNo || "",
-            railOut: d.railOut || false,
-            railOutDateTime: d.railOutDateTime?.split("T")[0] || "",
+            trainOut: d.railOut || false,
+            trainOutDateTime: d.railOutDateTime?.split("T")[0] || "",
             dispatchDate: d.dispatchDate?.split("T")[0] || "",
             transporterName: d.transporterName || "",
             vehicleNo: d.vehicleNo || "",
@@ -287,9 +287,36 @@ export default function MainInvoice() {
         navigate(-1);
     }, [navigate]);
 
+    // const markDirty = useCallback((key, value) => {
+    //     setDirtyData((prev) => ({ ...prev, [key]: value }));
+    // }, []);
     const markDirty = useCallback((key, value) => {
-        setDirtyData((prev) => ({ ...prev, [key]: value }));
-    }, []);
+        setDirtyData((prev) => {
+            const updated = { ...prev };
+
+            const originalValue = key
+                .split(".")
+                .reduce((obj, k) => obj?.[k], originalData);
+
+            const isNumeric = (v) =>
+                v !== null &&
+                v !== undefined &&
+                v !== "" &&
+                !Number.isNaN(Number(v));
+
+            const isEqual = isNumeric(originalValue) && isNumeric(value)
+                ? Number(originalValue) === Number(value)
+                : String(originalValue ?? "") === String(value ?? "");
+
+            if (isEqual) {
+                delete updated[key];
+            } else {
+                updated[key] = value;
+            }
+
+            return updated;
+        });
+    }, [originalData]);
 
     const buildNestedPayload = (dirtyData) => {
         const result = {};
@@ -361,13 +388,13 @@ export default function MainInvoice() {
 
                     {/* Invoice selector */}
                     <div className="ml-auto w-64">
-                        <CustomSelect
+                        {/* <CustomSelect
                             options={invoiceOptions}
                             value={selectedInvoiceId}
                             onChange={handleInvoiceChange}
                             placeholder={invoicesLoading ? "Loading invoices…" : "Select Invoice No."}
                             searchable
-                        />
+                        /> */}
                     </div>
 
                     {/* Action buttons */}
@@ -395,7 +422,7 @@ export default function MainInvoice() {
                 </div>
 
                 {/* Tab row */}
-              
+
                 <div className="flex-1 flex justify-evenly items-center w-ful gap-1 p-1 m-2 rounded-xl bg-slate-50 border border-[#003366]/20 shadow-sm">
                     {TABS.map((tab) => {
                         const Icon = tab.icon;

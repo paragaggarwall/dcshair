@@ -605,11 +605,28 @@ export default function ShippingDetails({
         (field) => () => {
             setform((prev) => {
                 const newValue = !prev[field];
-                markDirty(field, newValue);
-                return { ...prev, [field]: newValue };
+
+                // Get original value from API
+                const originalValue = originalData?.[field] ?? false;
+
+                // If it is back to original, remove from dirty
+                if (newValue === originalValue) {
+                    setDirtyData((d) => {
+                        const updated = { ...d };
+                        delete updated[field];
+                        return updated;
+                    });
+                } else {
+                    markDirty(field, newValue);
+                }
+
+                return {
+                    ...prev,
+                    [field]: newValue,
+                };
             });
         },
-        [markDirty]
+        [markDirty, originalData, setDirtyData]
     );
 
     // ── Accordion open/close (purely local UI — not dirty) ───────────────────
@@ -755,9 +772,9 @@ export default function ShippingDetails({
                             />
                             <InputBox
                                 title="Shipping Line or Airline Name"
-                                inputFor="shippingLineOrAirlineName"
-                                value={form.shippingLineOrAirlineName}
-                                handleChangeFunction={set("shippingLineOrAirlineName")}
+                                inputFor="flightNo"
+                                value={form.flightNo}
+                                handleChangeFunction={set("flightNo")}
                             />
                             <InputBox
                                 title="Destination"
