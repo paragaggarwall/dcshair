@@ -349,10 +349,12 @@ export default function GenerateContract() {
       errors.items = 'Please add at least one product';
     } else {
       data.items.forEach((item, idx) => {
-        if (!item.weight || Number(item.weight) <= 0) {
+        console.log("wrfger", item);
+
+        if (!item || Number(item.weight) <= -1) {
           errors[`items_${idx}_weight`] = 'weight must be greater than 0';
         }
-        if (!item.pricePerKg || Number(item.pricePerKg) <= 0) {
+        if (!item || Number(item.pricePerKg) <= -1) {
           errors[`items_${idx}_price`] = 'Price must be greater than 0';
         }
       });
@@ -584,6 +586,7 @@ export default function GenerateContract() {
             >
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <CustomSelect
+                  required={true}
                   label="Country of Origin"
                   options={[
                     { id: 'INDIA', name: 'INDIA' },
@@ -593,6 +596,7 @@ export default function GenerateContract() {
                   onChange={(val) => setFormData(p => ({ ...p, countryOfOrigin: val }))}
                 />
                 <CustomSelect
+                  required={true}
                   label="Country of Destination"
                   options={[
                     { id: 'USA', name: 'USA' },
@@ -603,6 +607,7 @@ export default function GenerateContract() {
                   onChange={(val) => setFormData(p => ({ ...p, countryOfDestination: val }))}
                 />
                 <CustomSelect
+                  required={true}
                   label="Pre-Carriage By"
                   options={[{ id: 'Sea', name: 'Sea' }, { id: 'Air', name: 'Air' }, { id: 'Road', name: 'Road' }]}
                   value={formData.preCarriageBy}
@@ -635,6 +640,7 @@ export default function GenerateContract() {
                   placeholder="-"
                 />
                 <InputBox
+                  isMandatory
                   title="Exp. Departure Date"
                   type="date"
                   inputFor="expectedDepartureDate"
@@ -643,6 +649,7 @@ export default function GenerateContract() {
                   placeholder="-"
                 />
                 <InputBox
+                  isMandatory
                   type="date"
                   title="Exp. Delivery Date"
                   inputFor="expectedDeliveryDate"
@@ -651,6 +658,7 @@ export default function GenerateContract() {
                   placeholder="-"
                 />
                 <CustomSelect
+                  required={true}
                   label="Terms of Payment"
                   options={options.termsOfPayment}
                   value={formData.termsOfPaymentId}
@@ -658,6 +666,7 @@ export default function GenerateContract() {
                   placeholder="-"
                 />
                 <CustomSelect
+                  required={true}
                   label="Payment Term"
                   placeholder="-"
                   options={[
@@ -669,6 +678,7 @@ export default function GenerateContract() {
                   onChange={(val) => setFormData(p => ({ ...p, paymentterm: val }))}
                 />
                 <InputBox
+                  isMandatory
                   title="Operating Airlines"
                   inputFor="operatingAirlines"
                   value={formData.operatingAirlines}
@@ -708,6 +718,7 @@ export default function GenerateContract() {
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                   <MultiSelect
+                    required={true}
                     label="Default Colors"
                     options={colorOptions}
                     value={color}
@@ -715,6 +726,7 @@ export default function GenerateContract() {
                   />
 
                   <MultiSelect
+                    required={true}
                     label="Default Sizes"
                     options={sizeOptions}
                     value={sizes}
@@ -822,6 +834,7 @@ export default function GenerateContract() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                 <InputBox
+                  isMandatory
                   title="cartonweight"
                   inputFor="cartonweight"
                   value={formData.cartonweight}
@@ -830,6 +843,7 @@ export default function GenerateContract() {
                 />
 
                 <CustomSelect
+                  required={true}
                   label="Currency"
                   options={[
                     { id: "USD", name: "USD" },
@@ -842,6 +856,7 @@ export default function GenerateContract() {
                 />
 
                 <CustomSelect
+                  required={true}
                   label="Size Scale"
                   options={[
                     { id: "inch", name: "inch" },
@@ -900,7 +915,7 @@ export default function GenerateContract() {
       </div>
 
 
-     
+
 
     </div>
   );

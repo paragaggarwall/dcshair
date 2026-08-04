@@ -45,6 +45,11 @@ exports.createContract = async (req, res) => {
       throw new Error("At least one item is required");
     }
 
+    const newitems = items.filter(item =>
+      Number(item.pricePerKg) > 0 &&
+      Number(item.weight) > 0
+    );
+
     const existcontract = await prisma.contract.findUnique({
       where: {
         name: name,
@@ -84,7 +89,7 @@ exports.createContract = async (req, res) => {
       cartonweight: Number(cartonweight),
       createdBy: req.user.email,
       contractItems: {
-        create: items.map((item) => ({
+        create: newitems.map((item) => ({
           productId: Number(item.productId),
           color: item.color,
           size: item.size,
