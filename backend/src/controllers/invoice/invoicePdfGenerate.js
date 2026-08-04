@@ -628,7 +628,7 @@ async function generateInvoicePdf(data, outputStream) {
 
         // Total row
         const totalH = 20;
-        const grandTotal = items.reduce((sum, item) => sum + Number((item.quantity * item.pricePerKg) || 0), 0);
+        const grandTotal = items.reduce((sum, item) => sum + Number((item.weight * item.pricePerKg) || 0), 0);
 
         doc.font("Helvetica-Bold").fontSize(9).text(
             `TOTAL USD ${grandTotal.toFixed(2)}`,
