@@ -305,7 +305,6 @@ exports.getAllInvoices = async (req, res) => {
     if (!data) {
       throw new Error("Invoice data not found");
     }
-
     return res.status(200).json({
       success: true,
       message: "Invoices fetched successfully",
