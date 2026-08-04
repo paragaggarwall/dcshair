@@ -1280,7 +1280,7 @@ export default function InvoiceGenerate() {
                 if (resp?.success) {
                     setD(data);
                     prefillFromData(data);
-                    toast.success(resp?.message || 'fetch successfully');
+                    // toast.success(resp?.message || 'fetch successfully');
                 }
             } catch (e) {
                 console.error(e);
