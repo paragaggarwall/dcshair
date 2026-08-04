@@ -227,15 +227,15 @@ async function contractPdfGenerator(contract) {
             ['PRODUCT / SIZE', 'QUANTITY\nKGS', 'PRICE/KG (USD)', 'TOTAL AMOUNT\nUS$'],
             ...items.map(it => [
                 it.product?.name || '-',
-                fmt.num(it.quantity),
+                fmt.num(it.weight),
                 fmt.money(it.pricePerKg),
-                fmt.money(it.totalAmount),
+                fmt.money(it.Amount),
             ]),
             [
                 'TOTAL',
-                fmt.num(items.reduce((s, i) => s + Number(i.quantity), 0)),
+                fmt.num(items.reduce((s, i) => s + Number(i.weight), 0)),
                 '',
-                fmt.money(items.reduce((s, i) => s + Number(i.totalAmount), 0)),
+                fmt.money(items.reduce((s, i) => s + Number(i.Amount), 0)),
             ],
         ];
 

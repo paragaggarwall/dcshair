@@ -583,7 +583,7 @@ async function generateInvoicePdf(data, outputStream) {
 
             // QTY
             doc.font("Helvetica").fontSize(8).text(
-                String(item.quantity || ""),
+                String(item.weight || ""),
                 col2X + PAD,
                 itemY,
                 {
@@ -605,7 +605,7 @@ async function generateInvoicePdf(data, outputStream) {
 
             // AMOUNT
             doc.font("Helvetica").fontSize(8).text(
-                Number((item.quantity * item.pricePerKg) || 0).toFixed(2),
+                Number((item.weight * item.pricePerKg) || 0).toFixed(2),
                 col4X + PAD,
                 itemY,
                 {
@@ -628,7 +628,7 @@ async function generateInvoicePdf(data, outputStream) {
 
         // Total row
         const totalH = 20;
-        const grandTotal = items.reduce((sum, item) => sum + Number((item.quantity * item.pricePerKg) || 0), 0);
+        const grandTotal = items.reduce((sum, item) => sum + Number((item.weight * item.pricePerKg) || 0), 0);
 
         doc.font("Helvetica-Bold").fontSize(9).text(
             `TOTAL USD ${grandTotal.toFixed(2)}`,

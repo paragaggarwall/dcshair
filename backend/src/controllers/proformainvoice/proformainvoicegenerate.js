@@ -528,7 +528,7 @@ async function generateProformaInvoice(data, outputStream) {
                     .font("Helvetica")
                     .fontSize(8)
                     .heightOfString(
-                        String(item.product.size || item.product.name || ""),
+                        String(item.size || item.product.name || ""),
                         {
                             width: COL1_W - PAD * 2,
                         }
@@ -568,7 +568,7 @@ async function generateProformaInvoice(data, outputStream) {
                     .slice(0, i)
                     .reduce((a, b) => a + b, 0);
 
-            // SIZE
+            // name
             doc.font("Helvetica").fontSize(8).text(
                 String(item.product.name || ""),
                 col1X + PAD,
@@ -581,7 +581,7 @@ async function generateProformaInvoice(data, outputStream) {
 
             // QTY
             doc.font("Helvetica").fontSize(8).text(
-                String(item.quantity || ""),
+                String(item.weight || ""),
                 col2X + PAD,
                 itemY,
                 {
@@ -603,7 +603,7 @@ async function generateProformaInvoice(data, outputStream) {
 
             // AMOUNT
             doc.font("Helvetica").fontSize(8).text(
-                Number((item.quantity * item.pricePerKg) || 0).toFixed(2),
+                Number((item.weight * item.pricePerKg) || 0).toFixed(2),
                 col4X + PAD,
                 itemY,
                 {
@@ -626,7 +626,7 @@ async function generateProformaInvoice(data, outputStream) {
 
         // Total row
         const totalH = 20;
-        const grandTotal = items.reduce((sum, item) => sum + Number((item.quantity * item.pricePerKg) || 0), 0);
+        const grandTotal = items.reduce((sum, item) => sum + Number((item.weight * item.pricePerKg) || 0), 0);
 
         doc.font("Helvetica-Bold").fontSize(9).text(
             `TOTAL USD ${grandTotal.toFixed(2)}`,

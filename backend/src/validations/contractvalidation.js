@@ -2,11 +2,11 @@ const Joi = require("joi");
 
 const contractItemSchema = Joi.object({
     productId: Joi.number().integer().required(),
-    weight: Joi.number().positive().required(),
-    pricePerKg: Joi.number().positive().required(),
+    weight: Joi.number().greater(-1).required(),
+    pricePerKg: Joi.number().greater(-1).required(),
     color: Joi.string().allow("").required(),
     size: Joi.string().allow("").required(),
-    Amount: Joi.number().positive().required(),
+    Amount: Joi.number().greater(-1).required(),
 });
 
 const createContractSchema = Joi.object({
